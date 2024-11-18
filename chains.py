@@ -7,7 +7,7 @@ from prompts import get_supervisor_prompt_template, get_finish_step_prompt
 from schemas import RouteSchema
 
 
-def get_supervisor_chain(llm: BaseChatModel):
+def get_supervisor_chain(llm: BaseChatModel, current_date=None):
     """
     Returns a supervisor chain that manages a conversation between workers.
 
@@ -22,46 +22,34 @@ def get_supervisor_chain(llm: BaseChatModel):
     """
 
     team_members = get_team_members_details()
+    formatted_members_string = "".join(
+        f"**{i+1} {member['name']}**\nRole: {member['description']}\n\n"
+        for i, member in enumerate(team_members)
+    ).strip()
 
-    # Generate the formatted string
-    formatted_string = ""
-    for i, member in enumerate(team_members):
-        formatted_string += (
-            f"**{i+1} {member['name']}**\nRole: {member['description']}\n\n"
-        )
-
-    # Remove the trailing new line
-    formatted_members_string = formatted_string.strip()
-    system_prompt = get_supervisor_prompt_template()
-
-    options = [member["name"] for member in team_members]
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system_prompt),
-            MessagesPlaceholder(variable_name="messages"),
-            (
-                "system",
-                """
-                
-                Few steps to follow:
-                - Keep responses focused on financial analysis and investment decisions
-                - Ensure all relevant financial agents are consulted for comprehensive analysis
-                - Provide clear, data-driven recommendations
-                - Only use agents that are relevant to the financial query
-                - Maintain professional financial context throughout the conversation
-                
-                Penalty point will be given if you deviate from financial analysis focus.
-                Given the conversation above, who should act next?
-                "Or should we FINISH? Select one of: {options}.
-                 Do only what is asked, and do not deviate from the instructions. Don't
-                 make up information.""",
-            ),
-        ]
-    ).partial(options=str(options), members=formatted_members_string)
-
-    supervisor_chain = prompt | llm.with_structured_output(RouteSchema)
-
-    return supervisor_chain
+    system_prompt = get_supervisor_prompt_template(current_date)
+    options = [member["name"] for member in team_members] + ["Synthesizer", "FINISH"]
+    
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="messages"),
+        ("system", """
+            Given the conversation above and investment profile, determine the next step:
+            1. If reflection analysis was just received:
+               - Review reflection recommendations
+               - Route to specific agent if gaps identified
+               - Route to Synthesizer if analysis is complete
+            2. If synthesis is complete, select FINISH
+            3. Otherwise, select appropriate next agent 
+            
+            Select one of: {options}
+            """),
+    ]).partial(
+        options=str(options),
+        members=formatted_members_string
+    )
+    
+    return prompt | llm.with_structured_output(RouteSchema)
 
 
 def get_finish_chain(llm: BaseChatModel):
@@ -77,3 +65,5 @@ def get_finish_chain(llm: BaseChatModel):
     )
     finish_chain = prompt | llm
     return finish_chain
+
+

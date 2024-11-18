@@ -20,7 +20,7 @@ def get_team_members_details() -> dict:
                 "get_income_statement",
                 "get_balance_sheet",
                 "get_cash_flow",
-                "polygon_financials_tool"
+                
             ]
         },
         {
@@ -38,7 +38,7 @@ def get_team_members_details() -> dict:
             "description": "Focuses on market data analysis and insider trading patterns to provide trading insights.",
             "tools": [
                 "get_insider_transactions",
-                "polygon_agg_tool"
+                "get_stock_aggregates"
             ]
         },
         {

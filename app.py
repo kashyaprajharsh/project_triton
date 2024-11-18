@@ -3,8 +3,9 @@ from langchain_community.chat_message_histories import StreamlitChatMessageHisto
 from custom_callback_handler import CustomStreamlitCallbackHandler
 from agents import define_graph
 from langchain_core.messages import HumanMessage, AIMessage
-
+from datetime import datetime
 from config import setup_environment
+from personality import AgentPersonality, RiskTolerance, TimeHorizon, InvestmentStyle
 
 setup_environment()
 
@@ -46,8 +47,66 @@ def process_agent_output(output, response_container):
     except Exception as e:
         st.error(f"Error processing output: {str(e)}")
 
+with st.sidebar:
+    st.header("Investment Profile")
+    
+    risk_tolerance = st.selectbox(
+        "Risk Tolerance",
+        options=[rt.value for rt in RiskTolerance],
+        index=[rt.value for rt in RiskTolerance].index(RiskTolerance.MODERATE.value),
+        help="Choose your risk tolerance level"
+    )
+    
+    time_horizon = st.selectbox(
+        "Time Horizon",
+        options=[th.value for th in TimeHorizon],
+        index=[th.value for th in TimeHorizon].index(TimeHorizon.MEDIUM_TERM.value),
+        help="Select your investment time horizon"
+    )
+    
+    investment_style = st.selectbox(
+        "Investment Style",
+        options=[style.value for style in InvestmentStyle],
+        index=[style.value for style in InvestmentStyle].index(InvestmentStyle.BLEND.value),
+        help="Choose your preferred investment style"
+    )
+    
+    # Initialize or update personality
+    personality = AgentPersonality(
+        risk_tolerance=RiskTolerance(risk_tolerance),
+        time_horizon=TimeHorizon(time_horizon),
+        investment_style=InvestmentStyle(investment_style)
+    )
+    
+    # Always update the personality in session state
+    st.session_state.personality = personality
+    
+    # Debug print
+    print("\n=== DEBUG: Current Investment Profile ===")
+    print(f"Risk Tolerance: {risk_tolerance}")
+    print(f"Time Horizon: {time_horizon}")
+    print(f"Investment Style: {investment_style}")
+    print(f"Personality Context: {st.session_state.personality.get_prompt_context()}")
+    print("=====================================\n")
+
+# Add he top after imports
+def debug_state(state):
+    """Debug helper to print state contents"""
+    print("\n=== DEBUG: State Contents ===")
+    for key, value in state.items():
+        if key == "messages":
+            print(f"messages: {len(value)} messages")
+        elif key == "personality":
+            print(f"personality: {value.get_prompt_context()}")
+        else:
+            print(f"{key}: {value}")
+    print("===========================\n")
+
 # Chat input and processing
 if prompt := st.chat_input("What would you like to analyze?"):
+    print("\n=== DEBUG: New Chat Input ===")
+    print(f"Prompt: {prompt}")
+    
     with st.chat_message("user"):
         st.write(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -63,18 +122,27 @@ if prompt := st.chat_input("What would you like to analyze?"):
                 "temperature": 0.3,
             }
             
+            # Create state and debug it
+            state = {   
+                "current_date": datetime.now(),
+                "messages": list(message_history.messages) + [prompt],
+                "user_input": prompt,
+                "config": settings,
+                "callback": callback_handler,
+                "personality": st.session_state.personality
+            }
+            debug_state(state)
+            
             # Process through agent graph
+            print("\n=== DEBUG: Invoking Flow Graph ===")
             output = flow_graph.invoke(
-                {
-                    "messages": list(message_history.messages) + [prompt],
-                    "user_input": prompt,
-                    "config": settings,
-                    "callback": callback_handler,
-                },
+                state,
                 {"recursion_limit": 30},
             )
+            print("Flow graph execution completed")
             
             # Process and display the output
+            print("\n=== DEBUG: Processing Output ===")
             process_agent_output(output, response_container)
             
             # Add final synthesis to chat history
@@ -84,12 +152,14 @@ if prompt := st.chat_input("What would you like to analyze?"):
                 None
             )
             if final_message:
+                print("Final synthesis found and added to chat history")
                 st.session_state.messages.append({
                     "role": "assistant", 
                     "content": final_message.content
                 })
             
         except Exception as e:
+            print(f"\n=== DEBUG: Error Occurred ===\n{str(e)}")
             st.error(f"An error occurred: {str(e)}")
             st.session_state.messages.append({
                 "role": "assistant", 

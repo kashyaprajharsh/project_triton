@@ -9,7 +9,7 @@ from langchain_community.utilities.polygon import PolygonAPIWrapper
 from eventregistry import *
 import requests
 import os
-from config import setup_environment, news_client_id, FINANCIAL_MODELING_PREP_API_KEY, apha_api_key
+from config import setup_environment, news_client_id, FINANCIAL_MODELING_PREP_API_KEY, apha_api_key,POLYGON_API_KEY
 
 setup_environment()
 
@@ -22,20 +22,30 @@ er = EventRegistry(apiKey = news_client_id, allowUseOfArchive=False)
 @tool
 def get_stock_price(symbol):
     """
-    Fetch the current stock price for the given symbol, the current volume, the average price 50d and 200d, EPS, PE and the next earnings Announcement.
+    Fetch the current stock price and key market data for the given symbol.
     """
-    url = f"https://financialmodelingprep.com/api/v3/quote-order/{symbol}?apikey={FINANCIAL_MODELING_PREP_API_KEY}"
+    url = f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={FINANCIAL_MODELING_PREP_API_KEY}"
     response = requests.get(url)
     data = response.json()
     try:
-        price = data[0]['price']
-        volume = data[0]['volume']
-        priceAvg50 = data[0]['priceAvg50']
-        priceAvg200 = data[0]['priceAvg200']
-        eps = data[0]['eps']
-        pe = data[0]['pe']
-        earningsAnnouncement = data[0]['earningsAnnouncement']
-        return {"symbol": symbol.upper(), "price": price, "volume":volume,"priceAvg50":priceAvg50, "priceAvg200":priceAvg200, "EPS":eps, "PE":pe, "earningsAnnouncement":earningsAnnouncement }
+        result = data[0]
+        return {
+            "symbol": result["symbol"],
+            "name": result["name"],
+            "price": result["price"],
+            "change": result["change"],
+            "changesPercentage": result["changesPercentage"],
+            "dayLow": result["dayLow"],
+            "dayHigh": result["dayHigh"],
+            "yearLow": result["yearLow"],
+            "yearHigh": result["yearHigh"],
+            "volume": result["volume"],
+            "avgVolume": result["avgVolume"],
+            "priceAvg50": result["priceAvg50"],
+            "priceAvg200": result["priceAvg200"],
+            "eps": result["eps"],
+            "pe": result["pe"],
+        }
     except (IndexError, KeyError):
         return {"error": f"Could not fetch price for symbol: {symbol}"}
 
@@ -228,7 +238,7 @@ tools = ptoolkit.get_tools()
 #     print(tool.name)
 polygon_agg_tool = next(tool for tool in tools if tool.name == "polygon_aggregates")
 polygon_ticker_news_tool = next(tool for tool in tools if tool.name == "polygon_ticker_news")
-polygon_financials_tool = next(tool for tool in tools if tool.name == "polygon_financials")
+# polygon_financials_tool = next(tool for tool in tools if tool.name == "polygon_financials")
 
 
 @tool
@@ -522,6 +532,72 @@ def get_earnings_history(symbol: str) -> dict:
     except Exception as e:
         return {"error": f"Failed to fetch earnings data: {str(e)}"}
 
+@tool
+def get_stock_aggregates(
+    symbol: str,
+    multiplier: int = 1,
+    timespan: str = "day",
+    from_date: str = None,
+    to_date: str = None,
+    adjusted: bool = True,
+    sort: str = "asc",
+    limit: int = 5000
+) -> dict:
+    """
+    Fetch aggregate bars (OHLCV) for a stock over a given date range with custom time windows.
+    
+    Args:
+        symbol (str): Stock ticker symbol (e.g., 'AAPL')
+        multiplier (int): Size of the timespan multiplier (e.g., 1, 2, 5)
+        timespan (str): Size of the time window ('minute', 'hour', 'day', 'week', 'month', 'quarter', 'year')
+        from_date (str): Start date in YYYY-MM-DD format
+        to_date (str): End date in YYYY-MM-DD format
+        adjusted (bool): Whether to adjust for splits
+        sort (str): Sort direction ('asc' or 'desc')
+        limit (int): Number of results (max 50000)
+    
+    Returns:
+        dict: Aggregated stock data including OHLCV values
+    """
+    try:
+        base_url = "https://api.polygon.io/v2/aggs/ticker"
+        url = f"{base_url}/{symbol}/range/{multiplier}/{timespan}/{from_date}/{to_date}"
+        
+        params = {
+            "adjusted": str(adjusted).lower(),
+            "sort": sort,
+            "limit": limit,
+            "apiKey": POLYGON_API_KEY
+        }
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        if data.get("status") != "OK":
+            return {"error": data.get("error", "Failed to fetch aggregate data")}
+            
+        results = []
+        for bar in data.get("results", []):
+            results.append({
+                "timestamp": bar["t"],
+                "open": bar["o"],
+                "high": bar["h"],
+                "low": bar["l"],
+                "close": bar["c"],
+                "volume": bar["v"],
+                "vwap": bar.get("vw"),
+                "transactions": bar.get("n")
+            })
+            
+        return {
+            "ticker": symbol,
+            "adjusted": adjusted,
+            "results_count": len(results),
+            "aggregates": results
+        }
+        
+    except Exception as e:
+        return {"error": f"Failed to fetch aggregate data: {str(e)}"}
 
 # 1. Financial Metrics Agent - focuses on core financial data
 financial_metrics_tools = [
@@ -531,7 +607,6 @@ financial_metrics_tools = [
     get_balance_sheet,
     get_cash_flow,
     get_earnings_history,
-    polygon_financials_tool
 ]
 
 # 2. News & Sentiment Agent - focuses on news analysis
@@ -545,6 +620,6 @@ news_sentiment_tools = [
 # 3. Market Intelligence Agent - focuses on market data and insider activity
 market_intelligence_tools = [
     get_insider_transactions,
-    polygon_agg_tool
+    get_stock_aggregates
 ]
 

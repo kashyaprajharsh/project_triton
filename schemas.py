@@ -1,5 +1,7 @@
-from typing import Literal, Optional, List, Union
+from typing import Literal, Optional, List, Union, Dict , Any
+from datetime import datetime
 from pydantic import BaseModel, Field
+
 
 class RouteSchema(BaseModel):
     next_action: Literal[
@@ -9,9 +11,9 @@ class RouteSchema(BaseModel):
         "SQLAgent",
         "Reflection",
         "Synthesizer",
+        "FINISH"
     ] = Field(
         ...,
         title="Next",
         description="Select the next role",
     )
-
