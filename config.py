@@ -15,11 +15,13 @@ LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
 
 # Financial Modeling Prep Configuration
 FINANCIAL_MODELING_PREP_API_KEY = os.getenv("FINANCIAL_MODELING_PREP_API_KEY")
+if FINANCIAL_MODELING_PREP_API_KEY is None:
+    raise ValueError("FINANCIAL_MODELING_PREP_API_KEY not found in environment variables")
 
-# Polygon Configuration
+# # Polygon Configuration
 POLYGON_API_KEY = os.getenv("POLYGON_API_KEY")
 
-# News API Configuration
+# # News API Configuration
 news_client_id = os.getenv("news_client_id")
 apha_api_key = os.getenv("apha_api_key")    
 

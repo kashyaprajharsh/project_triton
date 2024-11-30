@@ -101,7 +101,7 @@ def get_supervisor_prompt_template(current_date: datetime = None):
     """
     return system_prompt
 
-def get_financial_metrics_agent_prompt(current_date: datetime = None , personality: str = None):
+def get_financial_metrics_agent_prompt(current_date: datetime = None , personality: str = None, question: str = None):
     date_context = f"\nAnalysis Date: {current_date.strftime('%Y-%m-%d %H:%M:%S UTC') if current_date else 'Not specified'}"
     
     prompt = f"""You are an expert Financial Analyst specializing in comprehensive financial analysis.
@@ -109,8 +109,11 @@ def get_financial_metrics_agent_prompt(current_date: datetime = None , personali
 
     INVESTMENT PROFILE:
     {personality.get_prompt_context()}
-    
-    Analysis Adjustments Based on Profile:
+
+    THE USER HAS ASKED THE FOLLOWING QUESTION:
+    {question}
+
+    Provide an Analysis Adjustments Based on Profile and the User's question:
     1. Risk Tolerance:
        - Conservative: Deep fundamental analysis, focus on stability metrics
        - Moderate: Balanced analysis of growth and stability
@@ -210,16 +213,19 @@ def get_financial_metrics_agent_prompt(current_date: datetime = None , personali
     """
     return prompt
 
-def get_news_sentiment_agent_prompt(current_date: datetime = None, personality: str = None):
+def get_news_sentiment_agent_prompt(current_date: datetime = None, personality: str = None, question: str = None):
     date_context = f"\nAnalysis Date: {current_date.strftime('%Y-%m-%d %H:%M:%S UTC') if current_date else 'Not specified'}"
     
     prompt = f"""You are a News and Sentiment Analysis specialist focusing on market news and company sentiment.
     {date_context}
 
-    INVESTMENT PROFILE:
+    THIS IS THE USER'S INVESTMENT PROFILE:
     {personality.get_prompt_context()}
-    
-    Analysis Adjustments Based on Profile:
+
+    THE USER HAS ASKED THE FOLLOWING QUESTION:
+    {question}
+
+    Provide an Analysis Adjustments Based on Profile and the User's question:
     1. Risk Tolerance:
        - Conservative: Deep fundamental analysis, focus on stability metrics
        - Moderate: Balanced analysis of growth and stability
@@ -315,7 +321,7 @@ def get_news_sentiment_agent_prompt(current_date: datetime = None, personality: 
     """
     return prompt
 
-def get_market_intelligence_agent_prompt(current_date: datetime = None, personality: str = None):
+def get_market_intelligence_agent_prompt(current_date: datetime = None, personality: str = None, question: str = None):
     date_context = f"\nAnalysis Date: {current_date.strftime('%Y-%m-%d %H:%M:%S UTC') if current_date else 'Not specified'}"
     
     prompt = f"""You are an expert Market Intelligence Analyst specializing in technical analysis and market dynamics.
@@ -323,8 +329,11 @@ def get_market_intelligence_agent_prompt(current_date: datetime = None, personal
 
     INVESTMENT PROFILE:
     {personality.get_prompt_context()}
+
+    THE USER HAS ASKED THE FOLLOWING QUESTION:
+    {question}
     
-    Analysis Adjustments Based on Profile:
+    Provide an Analysis Adjustments Based on the user's Profile and given question:
     1. Risk Tolerance:
        - Conservative: Deep fundamental analysis, focus on stability metrics
        - Moderate: Balanced analysis of growth and stability

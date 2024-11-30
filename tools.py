@@ -9,11 +9,16 @@ from langchain_community.utilities.polygon import PolygonAPIWrapper
 from eventregistry import *
 import requests
 import os
-from config import setup_environment, news_client_id, FINANCIAL_MODELING_PREP_API_KEY, apha_api_key,POLYGON_API_KEY
+#from config import setup_environment, news_client_id, FINANCIAL_MODELING_PREP_API_KEY, apha_api_key,POLYGON_API_KEY
+from config import (
+    setup_environment,
+    news_client_id,
+    apha_api_key,
+    POLYGON_API_KEY,
+    FINANCIAL_MODELING_PREP_API_KEY  # Make sure this is imported
+)
 
 setup_environment()
-
-
 
 
 er = EventRegistry(apiKey = news_client_id, allowUseOfArchive=False)
