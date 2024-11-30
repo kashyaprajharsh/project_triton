@@ -9,87 +9,7 @@ from personality import AgentPersonality, RiskTolerance, TimeHorizon, Investment
 
 setup_environment()
 
-# Page configuration        
-st.set_page_config(layout="wide")
-st.title("Financial Analysis Assistant 📊")
-
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "content": "Hello! I'm your financial analysis assistant. How can I help you analyze financial data today?"}
-    ]
-
-# Create the agent flow
-flow_graph = define_graph()
-message_history = StreamlitChatMessageHistory()
-
-# Display chat messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
-
-def process_agent_output(output, response_container):
-    """Process and display the agent output in a structured way"""
-    try:
-        messages = output.get("messages", [])
-        final_synthesis = None
-        
-        # Create an expander for the final synthesis
-        for message in messages:
-            if hasattr(message, 'name') and message.name == "FinalSynthesis":
-                final_synthesis = message.content
-                break
-        
-        if final_synthesis:
-            with response_container.expander("🎯 Final Recommendation", expanded=True):
-                response_container.markdown(final_synthesis)
-                
-    except Exception as e:
-        st.error(f"Error processing output: {str(e)}")
-
-with st.sidebar:
-    st.header("Investment Profile")
-    
-    risk_tolerance = st.selectbox(
-        "Risk Tolerance",
-        options=[rt.value for rt in RiskTolerance],
-        index=[rt.value for rt in RiskTolerance].index(RiskTolerance.MODERATE.value),
-        help="Choose your risk tolerance level"
-    )
-    
-    time_horizon = st.selectbox(
-        "Time Horizon",
-        options=[th.value for th in TimeHorizon],
-        index=[th.value for th in TimeHorizon].index(TimeHorizon.MEDIUM_TERM.value),
-        help="Select your investment time horizon"
-    )
-    
-    investment_style = st.selectbox(
-        "Investment Style",
-        options=[style.value for style in InvestmentStyle],
-        index=[style.value for style in InvestmentStyle].index(InvestmentStyle.BLEND.value),
-        help="Choose your preferred investment style"
-    )
-    
-    # Initialize or update personality
-    personality = AgentPersonality(
-        risk_tolerance=RiskTolerance(risk_tolerance),
-        time_horizon=TimeHorizon(time_horizon),
-        investment_style=InvestmentStyle(investment_style)
-    )
-    
-    # Always update the personality in session state
-    st.session_state.personality = personality
-    
-    # Debug print
-    print("\n=== DEBUG: Current Investment Profile ===")
-    print(f"Risk Tolerance: {risk_tolerance}")
-    print(f"Time Horizon: {time_horizon}")
-    print(f"Investment Style: {investment_style}")
-    print(f"Personality Context: {st.session_state.personality.get_prompt_context()}")
-    print("=====================================\n")
-
-# Add he top after imports
+# Debug helper function
 def debug_state(state):
     """Debug helper to print state contents"""
     print("\n=== DEBUG: State Contents ===")
@@ -102,27 +22,156 @@ def debug_state(state):
             print(f"{key}: {value}")
     print("===========================\n")
 
+
+
+
+# Page configuration        
+st.set_page_config(
+    page_title="FinSage AI | Intelligent Financial Analysis",
+    page_icon="https://img.icons8.com/?size=100&id=YagodtnP71eo&format=png&color=000000",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+
+
+# App Header with Logo and Title
+col1, col2 = st.columns([0.2, 4])
+with col1:
+    st.image("https://img.icons8.com/?size=100&id=YagodtnP71eo&format=png&color=000000", width=80)
+with col2:
+    st.title("FinSage AI" )
+    st.markdown("*Your Intelligent Financial Analysis Assistant*")
+
+print("\n=== DEBUG: Initializing Application ===")
+
+# Initialize chat history
+if "messages" not in st.session_state:
+    print("Initializing new chat history")
+    st.session_state.messages = [
+        {"role": "assistant", "content": "👋 Welcome to FinSage AI! I'm your advanced financial analysis assistant. How can I help you make data-driven financial decisions today?"}
+    ]
+
+# Create the agent flow
+flow_graph = define_graph()
+message_history = StreamlitChatMessageHistory()
+print("Agent flow graph initialized")
+
+# Enhanced message display
+for message in st.session_state.messages:
+    with st.chat_message(message["role"], avatar="🧑‍💼" if message["role"] == "user" else "🤖"):
+        st.write(message["content"])
+    print(f"Displayed message from {message['role']}")
+
+def process_agent_output(output, response_container):
+    """Process and display the agent output in a structured way"""
+    print("\n=== DEBUG: Processing Agent Output ===")
+    try:
+        messages = output.get("messages", [])
+        final_synthesis = None
+        
+        for message in messages:
+            if hasattr(message, 'name') and message.name == "FinalSynthesis":
+                final_synthesis = message.content
+                print("Found final synthesis")
+                break
+        
+        if final_synthesis:
+            print("Displaying final synthesis in UI")
+            st.markdown(final_synthesis)
+                
+    except Exception as e:
+        print(f"Error in process_agent_output: {str(e)}")
+        st.error(f"Error processing output: {str(e)}")
+
+# Enhanced Sidebar
+with st.sidebar:
+    st.markdown("## 📈 Investment Profile")
+    st.markdown("---")
+    
+    print("\n=== DEBUG: Setting up Investment Profile ===")
+    
+    # Risk Tolerance with visual indicator
+    risk_tolerance = st.selectbox(
+        "🎯 Risk Tolerance",
+        options=[rt.value for rt in RiskTolerance],
+        index=[rt.value for rt in RiskTolerance].index(RiskTolerance.MODERATE.value),
+        help="Choose your risk tolerance level"
+    )
+    print(f"Selected Risk Tolerance: {risk_tolerance}")
+    
+    # Time Horizon with visual indicator
+    time_horizon = st.selectbox(
+        "⏳ Time Horizon",
+        options=[th.value for th in TimeHorizon],
+        index=[th.value for th in TimeHorizon].index(TimeHorizon.MEDIUM_TERM.value),
+        help="Select your investment time horizon"
+    )
+    print(f"Selected Time Horizon: {time_horizon}")
+    
+    # Investment Style with visual indicator
+    investment_style = st.selectbox(
+        "💼 Investment Style",
+        options=[style.value for style in InvestmentStyle],
+        index=[style.value for style in InvestmentStyle].index(InvestmentStyle.BLEND.value),
+        help="Choose your preferred investment style"
+    )
+    print(f"Selected Investment Style: {investment_style}")
+    
+    # Initialize or update personality
+    personality = AgentPersonality(
+        risk_tolerance=RiskTolerance(risk_tolerance),
+        time_horizon=TimeHorizon(time_horizon),
+        investment_style=InvestmentStyle(investment_style)
+    )
+    
+    st.session_state.personality = personality
+    
+    # Debug print
+    print("\n=== DEBUG: Current Investment Profile ===")
+    print(f"Risk Tolerance: {risk_tolerance}")
+    print(f"Time Horizon: {time_horizon}")
+    print(f"Investment Style: {investment_style}")
+    print(f"Personality Context: {st.session_state.personality.get_prompt_context()}")
+    print("=====================================\n")
+    
+    st.markdown("---")
+    
+    # Profile Summary
+    st.markdown("### 📋 Profile Summary")
+    st.info(f"""
+    **Risk Level:** {risk_tolerance.title()}
+    **Timeline:** {time_horizon.replace('_', ' ').title()}
+    **Strategy:** {investment_style.title()}
+    """)
+    
+    # Clear chat button with styling
+    if st.button("🔄 Reset Conversation", key="clear_chat"):
+        print("\n=== DEBUG: Clearing Chat History ===")
+        st.session_state.messages = [{"role": "assistant", "content": "👋 Welcome to FinSage AI! How can I help you make data-driven financial decisions today?"}]
+        message_history.clear()
+        st.rerun()
+
 # Chat input and processing
-if prompt := st.chat_input("What would you like to analyze?"):
+if prompt := st.chat_input("Ask me about financial analysis, market trends, or investment strategies..."):
     print("\n=== DEBUG: New Chat Input ===")
     print(f"Prompt: {prompt}")
     
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar="🧑‍💼"):
         st.write(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
 
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar="🤖"):
         response_container = st.container()
         callback_handler = CustomStreamlitCallbackHandler(parent_container=response_container)
         
         try:
-            # Default settings for the model
+            print("\n=== DEBUG: Processing User Input ===")
             settings = {
                 "model": "gpt-4o-mini",
                 "temperature": 0.3,
             }
             
-            # Create state and debug it
             state = {   
                 "current_date": datetime.now(),
                 "messages": list(message_history.messages) + [prompt],
@@ -133,7 +182,6 @@ if prompt := st.chat_input("What would you like to analyze?"):
             }
             debug_state(state)
             
-            # Process through agent graph
             print("\n=== DEBUG: Invoking Flow Graph ===")
             output = flow_graph.invoke(
                 state,
@@ -141,11 +189,9 @@ if prompt := st.chat_input("What would you like to analyze?"):
             )
             print("Flow graph execution completed")
             
-            # Process and display the output
             print("\n=== DEBUG: Processing Output ===")
             process_agent_output(output, response_container)
             
-            # Add final synthesis to chat history
             final_message = next(
                 (msg for msg in output.get("messages", []) 
                  if hasattr(msg, 'name') and msg.name == "FinalSynthesis"),
@@ -160,14 +206,9 @@ if prompt := st.chat_input("What would you like to analyze?"):
             
         except Exception as e:
             print(f"\n=== DEBUG: Error Occurred ===\n{str(e)}")
-            st.error(f"An error occurred: {str(e)}")
+            st.error("🚨 An error occurred. Please try again or rephrase your question.")
+            print(f"Detailed error: {str(e)}")
             st.session_state.messages.append({
                 "role": "assistant", 
-                "content": "I apologize, but I encountered an error. Please try again."
+                "content": f"I apologize, but I encountered an error: {str(e)}"
             })
-
-# Clear chat button
-if st.sidebar.button("Clear Chat"):
-    st.session_state.messages = [{"role": "assistant", "content": "Hello! I'm your financial analysis assistant. How can I help you analyze financial data today?"}]
-    message_history.clear()
-    st.rerun()

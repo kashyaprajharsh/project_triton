@@ -19,6 +19,10 @@ from llms import llm
 from datetime import datetime
 from personality import AgentPersonality
 
+from langgraph.pregel import RetryPolicy
+
+
+
 def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, current_date: datetime = None):
     """
     Creates an agent using the specified ChatOpenAI model, tools, and system prompt.
@@ -60,20 +64,32 @@ def supervisor_node(state):
     print(f"Current Input: {state['user_input']}")
     print(f"Analysis Date: {state['current_date']}")
     print(f"Personality in supervisor: {state.get('personality')}")
+    
+    # Add SQL data cutoff check
+    sql_cutoff_date = datetime(2022, 12, 31)
+    requires_historical = state['current_date'] > sql_cutoff_date
+    print(f"Requires historical pre-2023 data consideration: {requires_historical}")
 
     chat_history = state.get("messages", [])
     supervisor_chain = get_supervisor_chain(llm, current_date=state['current_date'])
-    
+    print("="*50)
+    print("FULL CHAIN COMPONENTS:")
+    print(supervisor_chain)
+
     if not chat_history:
         chat_history.append(HumanMessage(state["user_input"]))
         print("Starting new conversation")
     
-    # Pass personality to the chain invocation
+    # Debug the chain invocation
+    print("\n=== Chain Invocation ===")
+    print("Messages:", len(chat_history))
+    print("Personality:", state.get("personality").get_prompt_context() if state.get("personality") else "None")
+    
     output = supervisor_chain.invoke({
         "messages": chat_history,
         "personality": state.get("personality").get_prompt_context() if state.get("personality") else ""
     })
-    print(f"Next Action: {output.next_action}")
+    print(f"\nNext Action: {output.next_action}")
     
     if output.next_action == "FINISH" and len(chat_history) > 0:
         state["next_step"] = "Reflection"
@@ -167,7 +183,9 @@ def sql_agent_node(state):
     """
     print("\n" + "-"*50)
     print("🗄️ SQL AGENT NODE")
-    question = state["messages"][-1].content
+    
+    state["callback"].write_agent_name("SQL Database Agent 🗄️")
+    question = state["user_input"]
     print(f"Processing query: {question}")
     
     try:
@@ -178,7 +196,8 @@ def sql_agent_node(state):
         formatted_result = f"Database Query Results:\n{result}"
         
         # Show the result through the callback handler
-        state["callback"].on_tool_end(formatted_result)
+        state["callback"].on_tool_start({"name": "SQL Query"}, question)
+        state["callback"].on_tool_end(result)
         
         state["messages"].append(
             AIMessage(content=formatted_result, name="SQLAgent")
@@ -199,7 +218,7 @@ def synthesize_responses(state):
     """
     state["callback"].write_agent_name("Investment Analysis Synthesis 🎯")
     print("\n" + "-"*50)
-    print("🎯 SYNTHESIS NODE")
+    print(" SYNTHESIS NODE")
     
     messages = state["messages"]
     print(f"Synthesizing {len(messages)} messages")
@@ -368,6 +387,7 @@ def reflection_node(state):
 
 
 
+
 class AgentState(TypedDict):
     current_date: datetime
     user_input: str
@@ -391,9 +411,16 @@ def define_graph():
     workflow.add_node("Supervisor", supervisor_node)
     workflow.add_node("MarketIntelligenceAgent", market_intelligence_node)
     workflow.add_node("SQLAgent", sql_agent_node)
-    workflow.add_node("Reflection", reflection_node)
     workflow.add_node("Synthesizer", synthesize_responses)
-    
+     # Add Reflection node with retry policy
+    workflow.add_node(
+        "Reflection", 
+        reflection_node
+        # retry=RetryPolicy(
+        #     max_attempts=2,
+        #     retry_on=lambda x: isinstance(x, ValueError) and "Analysis incomplete" in str(x)
+        # )
+    )
     # Set entry point
     workflow.set_entry_point("Supervisor")
     

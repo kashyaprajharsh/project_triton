@@ -10,7 +10,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # LangChain Configuration 
 LANGCHAIN_TRACING_V2 = "true"
 LANGCHAIN_ENDPOINT = "https://api.smith.langchain.com"
-LANGCHAIN_PROJECT = "Fin-agent"
+LANGCHAIN_PROJECT = "Fin-agent_Streamlit"
 LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
 
 # Financial Modeling Prep Configuration

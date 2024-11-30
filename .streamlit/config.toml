@@ -1,0 +1,7 @@
+[theme]
+primaryColor="#0E76A8"  # Professional LinkedIn-style blue
+backgroundColor="#FFFFFF"  # Clean white background
+secondaryBackgroundColor="#F0F7FA"  # Light blue tint for containers
+textColor="#2C3E50"  # Dark blue-gray for text
+font="sans serif"  # Clean, modern font
+

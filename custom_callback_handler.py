@@ -22,8 +22,22 @@ class CustomStreamlitCallbackHandler(BaseCallbackHandler):
     def on_tool_end(self, output: str, **kwargs):
         """Display tool execution result"""
         if self.current_agent_container:
-            self.current_agent_container.markdown("📤 Tool output:")
-            self.current_agent_container.code(output)
+            if isinstance(output, str) and "SQL Query:" in output:
+                # Split SQL results into query and results sections
+                parts = output.split("Results:", 1)
+                if len(parts) == 2:
+                    query = parts[0].replace("SQL Query:", "").strip()
+                    results = parts[1].strip()
+                    
+                    self.current_agent_container.markdown("📝 **SQL Query:**")
+                    self.current_agent_container.code(query, language="sql")
+                    self.current_agent_container.markdown("📊 **Results:**")
+                    self.current_agent_container.markdown(results)
+                else:
+                    self.current_agent_container.code(output)
+            else:
+                self.current_agent_container.markdown("📤 Tool output:")
+                self.current_agent_container.code(output)
 
     def on_agent_action(self, action: AgentAction, **kwargs):
         """Display agent action"""
