@@ -122,7 +122,7 @@ def financial_metrics_node(state):
     
     state["messages"].append(
         HumanMessage(content=output.get("output"), name="FinancialMetrics")
-    )
+    ) # referring to changing to type: AiMessage(content=output.get("output"), name="FinancialMetrics")
     print("-"*50 + "\n")
     return state
 
