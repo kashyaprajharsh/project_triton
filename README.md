@@ -14,9 +14,8 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
 
 - **Advanced Agent Evaluation**: Built on LangGraph's state management for continuous assessment
 - **Intelligent Multi-Agent System**: Powered by LangChain's agent framework for coordinated analysis
-- **Real-Time Market Integration**: OpenAI GPT-4 powered data processing and analysis
-- **Advanced Sentiment Analysis**: LangChain-based deep learning for market sentiment tracking
-- **Professional-Grade Analytics**: Industry-standard metrics with LangGraph workflow validation
+- **Real-Time Market Integration**: OpenAI GPT-4o powered data processing and analysis
+- **Advanced Sentiment Analysis**: Real time market sentiment analysis
 - **Interactive Visualization**: Beautiful, real-time charts powered by Streamlit
 - **Production-Ready**: Enterprise-grade architecture with LangGraph error handling
 
@@ -25,19 +24,15 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
 ### Revolutionary Agent Evaluation Framework
 - **LangGraph-Powered Tool Validation** 🛠️
   - Real-time monitoring through LangGraph state management
-  - Tool call success rate tracking with OpenAI function calling
   - Invalid tool request detection via LangChain's tool validation
   - Execution error monitoring through LangGraph callbacks
-  - Parser error detection using LangChain's output parsers
   - Comprehensive tool inventory management
 
 - **LangChain Agent Performance Metrics** 📊
-  - Tool usage statistics through LangChain callbacks
-  - Response quality assessment via OpenAI evaluators
+  - Tool usage statistics through LangChain callbacks Handler
+  - Agent specific response quality assessment
   - Task completion validation using LangGraph state tracking
-  - Cross-agent coordination through LangGraph workflows
-  - Performance benchmarking against defined criteria
-
+ 
 - **Topic Adherence & Quality** 🎯
   - Task-specific validation criteria
   - Expected output verification
@@ -61,7 +56,7 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
   - Each agent equipped with:
     - LangChain callback metrics
     - LangGraph state tracking
-    - OpenAI evaluation checks
+    - Custom evaluation checks
     - Cross-validation tools
 
 ### Evaluation Metrics & KPIs
@@ -83,22 +78,6 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
 }
 ```
 
-#### LangChain Quality Metrics
-- **Accuracy**
-  - OpenAI function call success rate: >95%
-  - LangChain tool validation rate: >98%
-  - LangGraph state verification: >99%
-
-- **Performance**
-  - LangChain agent response time: <2s
-  - LangGraph coordination efficiency: >90%
-  - OpenAI completion rate: >95%
-
-- **Reliability**
-  - LangGraph error recovery: >99%
-  - LangChain uptime: >99.9%
-  - State consistency: >99%
-
 ### Advanced Multi-Agent Architecture
 - **LangGraph Orchestrator** 🎯
   - Advanced workflow orchestration using StateGraph
@@ -106,33 +85,26 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
   - Real-time agent coordination through state management
   - Automated quality assurance via callbacks
 
-- **Financial Analysis Engine** 📊
+- **Financial Metrics Agent** 📊
   - Comprehensive fundamental analysis
-  - Advanced valuation models (DCF, Comparable Analysis)
-  - Industry-specific metrics and benchmarks
+  - quantitative financial data analysis to evaluate a company's financial health, valuation, and performance metrics.
   - Automated financial statement analysis
 
-- **Market Intelligence System** 📈
+- **Market Intelligence Agent** 📈
   - Real-time technical analysis
-  - Advanced pattern recognition
   - Volume profile analysis
-  - Options flow monitoring
-  - Dark pool activity tracking
-
-- **Sentiment Analytics** 📰
+  - tracks insider trading, support/resistance levels, price patterns, volume trends, and momentum indicators
+ 
+ 
+- **Sentiment Analysis Agent** 📰
   - Multi-source news aggregation
   - NLP-powered sentiment scoring
-  - Social media trend analysis
   - Market sentiment indicators
   - Real-time sentiment shifts detection
 
-- **Data Analytics Engine** 🗄️
+- **Historical Data Analytics Agent** 🗄️
   - High-performance SQL analytics
-  - Time-series analysis
-  - Predictive modeling
-  - Risk metrics calculation
-  - Custom indicator development
-
+  
 ### Enterprise-Grade Data Integration
 - **Market Data Providers**
   - [Financial Modeling Prep](https://financialmodelingprep.com/developer/docs/) - Real-time financial data
@@ -141,9 +113,7 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
 
 - **News & Sentiment Sources**
   - [Event Registry](https://eventregistry.org/) - Global news monitoring
-  - Twitter API v2 - Social sentiment tracking
-  - Reddit API - Community insights
-  - SEC EDGAR - Regulatory filings
+  
 
 - **Analytics Infrastructure**
   - High-performance SQLite database
@@ -155,8 +125,8 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
 
 ### Prerequisites
 - Python 3.10+
-- LangChain 0.1.0+
-- LangGraph 0.0.1+
+- LangChain 
+- LangGraph 
 - OpenAI API access
 - API keys for data providers
 
@@ -201,6 +171,11 @@ streamlit run app.py
 ```
 
 ### Example Queries
+
+####n Buy/Sell/Hold/Short/Long
+```text
+Should we sell or hold Alphabet Inc?
+```
 
 #### Fundamental Analysis
 ```text
@@ -267,31 +242,6 @@ financial_agent/
 └── README.md                 # Project documentation
 ```
 
-## 📊 Advanced Usage Examples
-
-### Fundamental Analysis
-```python
-# Complex fundamental analysis
-"Perform a comprehensive DCF valuation for AAPL with 5-year projections"
-"Analyze TSLA's R&D spending trends compared to automotive industry peers"
-"Calculate NVDA's operating leverage and margin expansion potential"
-```
-
-### Technical Analysis
-```python
-# Advanced technical signals
-"Identify potential breakout patterns for AMD using volume profile analysis"
-"Calculate VWAP deviation bands for AMZN with custom multipliers"
-"Generate Fibonacci extension levels for SPY based on recent price action"
-```
-
-### Market Research
-```python
-# Deep market insights
-"Analyze institutional flow patterns in semiconductor sector over last quarter"
-"Track unusual options activity in AI-related stocks with high open interest"
-"Generate correlation analysis between BTC movement and crypto mining stocks"
-```
 
 ## 🔥 Advanced Features
 
@@ -316,13 +266,8 @@ financial_agent/
 - Error handling and recovery
 - Comprehensive audit logging
 
-## 📈 Performance Metrics
 
-- **LangChain Response Time**: < 500ms for standard queries
-- **LangGraph State Updates**: Real-time to 15-minute delay
-- **OpenAI Accuracy**: 95%+ for technical indicators
-- **System Availability**: 99.9% uptime
-- **Concurrent Processing**: Handles 100+ parallel agent executions
+
 
 ## 🤝 Contributing
 
@@ -354,12 +299,12 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
   - Event Registry
 
 ## 📚 Documentation & Resources
-
+<!-- 
 - [Full Documentation](your-docs-link) - Comprehensive LangChain & LangGraph integration guide
 - [API Reference](your-api-docs) - Detailed OpenAI function specifications
 - [Video Tutorials](your-youtube) - Step-by-step LangChain implementation guides
 - [Example Notebooks](your-notebooks) - LangGraph workflow examples
-- [Technical Blog](your-blog-link) - Deep dives into agent evaluation
+- [Technical Blog](your-blog-link) - Deep dives into agent evaluation -->
 
 ---
 <div align="center">

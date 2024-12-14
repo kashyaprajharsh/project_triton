@@ -67,63 +67,91 @@ def process_agent_output(output, response_container):
         print(f"Error in process_agent_output: {str(e)}")
         st.error(f"Error processing output: {str(e)}")
 
+# Common header for both landing and chat pages
+def render_header():
+    col1, col2 = st.columns([0.2, 4])
+    with col1:
+        st.image("https://img.icons8.com/?size=100&id=YagodtnP71eo&format=png&color=000000", width=80)
+    with col2:
+        st.markdown("<h1><span style='color: #F5F5F5;'>Fin</span><span style='color: #D39D55;'>Sage</span></h1>", unsafe_allow_html=True)
+        st.markdown("<p style='font-style: italic; color: #D39D55;'>Smarter Insights, Confident Trades</p>", unsafe_allow_html=True)
+
 # Main content structure
 if not st.session_state.chat_started:
-    # Header with Logo
-    col1, col2 = st.columns([0.2, 4])
-    with col1:
-        st.image("https://img.icons8.com/?size=100&id=YagodtnP71eo&format=png&color=000000", width=80)
-    with col2:
-        st.title("FinSage AI")
-        st.markdown("*Your Intelligent Financial Analysis Assistant*")
-
-    # Main content in two columns
-    left_col, right_col = st.columns([1.2, 1])
+    # Clean container for the whole page
+    container = st.container()
     
-    with left_col:
-        # Welcome Image
-        st.image(
-            "agent_flow.png",
-            use_container_width=True,
-            caption="Powered by Guanabara AI​",
-            output_format="PNG"
+    with container:
+        # Center the logo using columns
+        col1, col2, col3 = st.columns([1, 0.5, 1])
+        with col2:
+            st.image(
+                "finsage_logo.png",
+                width=185,  # Adjust size as needed
+                use_container_width=False
+            )
+        
+        
+        # Header with text centered
+        st.markdown(
+            """
+            <div style='text-align: center;'>
+                <h1 style='margin-bottom: 0; color: #1E3A8A;'><span style='color: #F5F5F5;'>Fin</span><span style='color: #D39D55;'>Sage</span></h1>
+                <p style='font-style: italic; font-size: 1.2em; margin-top: 0.5rem; color: #D39D55;'>
+                    Smarter Insights, Confident Trades
+                </p>
+            </div>
+            <br>
+            """, 
+            unsafe_allow_html=True
         )
         
-        # Start Button
-        st.button("🚀 Start Your Financial Journey", key="start_chat", use_container_width=True,
-                 on_click=lambda: [
-                     setattr(st.session_state, 'chat_started', True),
-                     setattr(st.session_state, 'messages', [
-                         {"role": "assistant", "content": "👋 Welcome to FinSage AI! I'm your advanced financial analysis assistant. How can I help you make data-driven financial decisions today?"}
-                     ])
-                 ])
+        # Main content section
+        col1, col2 = st.columns([1.2, 1])
+        
+        with col1:
+            st.image(
+                "agent_flow.png",
+                width=650,
+                use_container_width=False,
+                caption="Powered by Guanabara AI​"
+            )
+            
+            st.button(
+                "🚀 Start Your Financial Journey",
+                key="start_chat",
+                use_container_width=True,
+                on_click=lambda: [
+                    setattr(st.session_state, 'chat_started', True),
+                    setattr(st.session_state, 'messages', [
+                        {"role": "assistant", "content": "👋 Welcome to FinSage AI! I'm your advanced financial analysis assistant. How can I help you make data-driven financial decisions today?"}
+                    ])
+                ]
+            )
 
-    with right_col:
-        # Features in clean format
-        st.markdown("### 📊 Market Analysis")
-        st.write("Real-time market trends and pattern analysis")
-        
-        st.markdown("### 💰 Investment Strategies")
-        st.write("Personalized investment recommendations")
-        
-        st.markdown("### 📈 Financial Metrics")
-        st.write("Key financial indicators and insights")
-        
-        st.markdown("### �� Market News")
-        st.write("Latest market news and impact analysis")
+        with col2:
+            st.markdown("### 📊 Market Analysis")
+            st.write("Real-time market trends and pattern analysis")
+            
+            st.markdown("### 💰 Investment Strategies")
+            st.write("Personalized investment recommendations")
+            
+            st.markdown("### 📈 Financial Metrics")
+            st.write("Key financial indicators and insights")
+            
+            st.markdown("### 📰 Market News")
+            st.write("Latest market news and impact analysis")
 
 else:
-    # Chat Page
-    # App Header with Logo and Title
-    col1, col2 = st.columns([0.2, 4])
-    with col1:
-        st.image("https://img.icons8.com/?size=100&id=YagodtnP71eo&format=png&color=000000", width=80)
-    with col2:
-        st.title("FinSage AI")
-        st.markdown("*Your Intelligent Financial Analysis Assistant*")
-
-    # Enhanced Sidebar
+    # Chat page
+    render_header()
+    
+    # Enhanced Sidebar with Logo
     with st.sidebar:
+        st.image("finsage_logo.png", width=175)
+        st.markdown("<h1 style='text-align: center; font-size: 24px;'><span style='color: #F5F5F5;'>Fin</span><span style='color: #D39D55;'>Sage</span></h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; font-style: italic; color: #D39D55;'>Smarter Insights, Confident Trades</p>", unsafe_allow_html=True)
+    
         st.markdown("## 📈 Investment Profile")
         st.markdown("---")
         
@@ -162,7 +190,6 @@ else:
         
         st.session_state.personality = personality
         
-        st.markdown("---")
         
         # Profile Summary
         st.markdown("### 📋 Profile Summary")
