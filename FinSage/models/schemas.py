@@ -7,7 +7,7 @@ from operator import add
 from langchain_core.messages import BaseMessage
 from langgraph.graph import MessagesState
 # local imports
-from models.personality import AgentPersonality
+from FinSage.models.personality import AgentPersonality
 
 # __________________________________________________________________________________________ #
 # ___________________________________ Routing Schema _______________________________________ #

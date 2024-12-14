@@ -6,14 +6,14 @@ import streamlit as st
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 from langchain_core.messages import HumanMessage, AIMessage
 from datetime import datetime
-from config.settings import setup_environment
+from FinSage.config.settings import setup_environment
 
-from models.personality import AgentPersonality, RiskTolerance, TimeHorizon, InvestmentStyle
+from FinSage.models.personality import AgentPersonality, RiskTolerance, TimeHorizon, InvestmentStyle
 
 # Local Imports
-from utils.callback_tools import CustomStreamlitCallbackHandler
-from agents.finsage import FinSage_agent
-from tools.plotting_tools import *
+from FinSage.utils.callback_tools import CustomStreamlitCallbackHandler
+from FinSage.agents.finsage import FinSage_agent
+from FinSage.tools.plotting_tools import *
 
 setup_environment()
 

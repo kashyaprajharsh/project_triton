@@ -16,13 +16,13 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage 
 
 # Local imports
-from utils.llm.llm import llm
-from config.settings import setup_environment
-from models.personality import AgentPersonality
-from tools.tools import news_sentiment_tools
-from prompts.system_prompts import get_news_sentiment_agent_prompt, NEWS_SENTIMENT_TOPIC_ADHERENCE_PROMPT
-from utils.callback_tools import CustomConsoleCallbackHandler
-from models.schemas import *
+from FinSage.utils.llm.llm import llm
+from FinSage.config.settings import setup_environment
+from FinSage.models.personality import AgentPersonality
+from FinSage.tools.tools import news_sentiment_tools
+from FinSage.prompts.system_prompts import get_news_sentiment_agent_prompt, NEWS_SENTIMENT_TOPIC_ADHERENCE_PROMPT
+from FinSage.utils.callback_tools import CustomConsoleCallbackHandler
+from FinSage.models.schemas import *
 
 # ##### HELPER FUNCTIONS #########
 def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iterations: int = 2,  return_intermediate_steps: bool = True) -> AgentExecutor:

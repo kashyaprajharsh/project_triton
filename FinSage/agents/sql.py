@@ -23,10 +23,10 @@ from langgraph.graph.message import AnyMessage, add_messages
 
 
 # local modules
-from utils.llm.llm import llm
-from models.schemas import *
-from utils.callback_tools import CustomConsoleCallbackHandler
-from prompts.system_prompts import SQL_AGENT_QUERY_PROMPT, SQL_AGENT_ANALYZE_PROMPT
+from FinSage.utils.llm.llm import llm
+from FinSage.models.schemas import *
+from FinSage.utils.callback_tools import CustomConsoleCallbackHandler
+from FinSage.prompts.system_prompts import SQL_AGENT_QUERY_PROMPT, SQL_AGENT_ANALYZE_PROMPT
 
 # Load environment variables
 load_dotenv()

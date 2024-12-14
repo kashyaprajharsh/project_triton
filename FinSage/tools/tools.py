@@ -1,4 +1,4 @@
-from utils.llm import llm
+from FinSage.utils.llm import llm
 from langchain_community.utilities import SQLDatabase
 from langchain.prompts import PromptTemplate
 from langchain_community.agent_toolkits import create_sql_agent
@@ -10,7 +10,7 @@ from eventregistry import *
 import requests
 import os
 #from config import setup_environment, news_client_id, FINANCIAL_MODELING_PREP_API_KEY, apha_api_key,POLYGON_API_KEY
-from config.settings import (
+from FinSage.config.settings import (
     setup_environment,
     news_client_id,
     apha_api_key,

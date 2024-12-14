@@ -1,7 +1,7 @@
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from config.settings import setup_environment
+from FinSage.config.settings import setup_environment
 
 setup_environment()
 

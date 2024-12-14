@@ -154,7 +154,7 @@ A sophisticated multi-agent system leveraging LangChain's agent framework and La
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.10+
 - LangChain 0.1.0+
 - LangGraph 0.0.1+
 - OpenAI API access

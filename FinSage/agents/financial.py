@@ -20,13 +20,13 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage 
 
 # local imports
-from models.schemas import *
-from prompts.system_prompts import get_financial_metrics_agent_prompt, FINANCIAL_METRICS_TOPIC_ADHERENCE_PROMPT
-from tools.tools import financial_metrics_tools
-from utils.llm.llm import llm
-from models.personality import AgentPersonality
-from utils.callback_tools import CustomConsoleCallbackHandler
-from config.settings import setup_environment
+from FinSage.models.schemas import *
+from FinSage.prompts.system_prompts import get_financial_metrics_agent_prompt, FINANCIAL_METRICS_TOPIC_ADHERENCE_PROMPT
+from FinSage.tools.tools import financial_metrics_tools
+from FinSage.utils.llm.llm import llm
+from FinSage.models.personality import AgentPersonality
+from FinSage.utils.callback_tools import CustomConsoleCallbackHandler
+from FinSage.config.settings import setup_environment
 
 # ##### HELPER FUNCTIONS #########
 def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iterations: int = 2,  return_intermediate_steps: bool = True) -> AgentExecutor:

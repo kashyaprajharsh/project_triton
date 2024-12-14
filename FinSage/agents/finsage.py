@@ -21,18 +21,18 @@ from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage 
 
 # Local imports
-from utils.llm.llm import llm, llm_syn
-from config.settings import setup_environment
-from models.schemas import *
-from config.members import get_team_members_details
-from utils.chains import get_supervisor_chain
-from models.personality import AgentPersonality
-from utils.callback_tools import CustomConsoleCallbackHandler
+from FinSage.utils.llm.llm import llm, llm_syn
+from FinSage.config.settings import setup_environment
+from FinSage.models.schemas import *
+from FinSage.config.members import get_team_members_details
+from FinSage.utils.chains import get_supervisor_chain
+from FinSage.models.personality import AgentPersonality
+from FinSage.utils.callback_tools import CustomConsoleCallbackHandler
 #   Import agents
-from agents.market import market_intelligence_agent
-from agents.financial import financial_metrics_agent
-from agents.sentiment import news_sentiment_agent
-from agents.sql import sql_agent
+from FinSage.agents.market import market_intelligence_agent
+from FinSage.agents.financial import financial_metrics_agent
+from FinSage.agents.sentiment import news_sentiment_agent
+from FinSage.agents.sql import sql_agent
 # FinSage Agent Nodes
 
 # Supervisor Node

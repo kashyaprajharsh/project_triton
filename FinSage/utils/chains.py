@@ -3,9 +3,9 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from typing import List
 
 # Local imports
-from config.members import get_team_members_details
-from prompts.system_prompts import get_supervisor_prompt_template, get_finish_step_prompt
-from models.schemas import RouteSchema
+from FinSage.config.members import get_team_members_details
+from FinSage.prompts.system_prompts import get_supervisor_prompt_template, get_finish_step_prompt
+from FinSage.models.schemas import RouteSchema
 
 
 def get_supervisor_chain(llm: BaseChatModel, current_date=None):
