@@ -1,0 +1,17 @@
+langchain 
+langgraph
+langchain_community 
+langchain-cohere  
+langchain-core 
+tiktoken 
+langchain-openai
+langchain-google-genai
+langchainhub 
+tavily-python 
+newsapi-python
+eventregistry
+python-dotenv
+datetime
+seaborn
+pandas
+matplotlib

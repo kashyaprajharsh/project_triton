@@ -68,6 +68,7 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+myvenv/
 # Sphinx documentation
 docs/_build/
 
@@ -130,6 +131,8 @@ ENV/
 env.bak/
 venv.bak/
 new-venv/
+myvenv/
+financial_agent/myvenv/
 
 # Spyder project settings
 .spyderproject

@@ -1,0 +1,12 @@
+langchain 
+langgraph
+langchain_community 
+langchain-cohere  
+langchain-core 
+tiktoken 
+langchain-openai 
+langchainhub 
+tavily-python 
+newsapi-python
+eventregistry
+streamlit

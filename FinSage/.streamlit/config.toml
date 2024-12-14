@@ -1,0 +1,6 @@
+[theme]
+primaryColor="#00838F"         # Refined teal
+backgroundColor="#0A1929"      # Deep blue
+secondaryBackgroundColor="#132F4C"  # Navy professional
+textColor="#FFFFFF"           # Bright white
+font="monospace"
