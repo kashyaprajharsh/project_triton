@@ -57,11 +57,16 @@ class CustomStreamlitCallbackHandler(BaseCallbackHandler):
         """Initialize the handler with a parent container"""
         self._parent_container = parent_container
         self.current_agent_container = None
+        self.is_finish_node = False
         super().__init__()
 
     def write_agent_name(self, name: str):
         """Create a new expander for each agent"""
-        self.current_agent_container = self._parent_container.expander(name, expanded=True)
+        self.is_finish_node = (name == "Conversation Handler 💬")
+        if not self.is_finish_node:
+            self.current_agent_container = self._parent_container.expander(name, expanded=True)
+        else:
+            self.current_agent_container = self._parent_container
 
     def on_tool_start(self, serialized: Dict[str, Any], input_str: str, **kwargs):
         """Display tool execution start"""
@@ -71,22 +76,27 @@ class CustomStreamlitCallbackHandler(BaseCallbackHandler):
     def on_tool_end(self, output: str, **kwargs):
         """Display tool execution result"""
         if self.current_agent_container:
-            if isinstance(output, str) and "SQL Query:" in output:
-                # Split SQL results into query and results sections
-                parts = output.split("Results:", 1)
-                if len(parts) == 2:
-                    query = parts[0].replace("SQL Query:", "").strip()
-                    results = parts[1].strip()
-                    
-                    self.current_agent_container.markdown("📝 **SQL Query:**")
-                    self.current_agent_container.code(query, language="sql")
-                    self.current_agent_container.markdown("📊 **Results:**")
-                    self.current_agent_container.markdown(results)
-                else:
-                    self.current_agent_container.code(output)
+            if self.is_finish_node:
+                # Direct output for finish node
+                self.current_agent_container.markdown(output)
             else:
-                self.current_agent_container.markdown("📤 Tool output:")
-                self.current_agent_container.code(output)
+                # Regular tool output handling with formatting
+                if isinstance(output, str) and "SQL Query:" in output:
+                    # Split SQL results into query and results sections
+                    parts = output.split("Results:", 1)
+                    if len(parts) == 2:
+                        query = parts[0].replace("SQL Query:", "").strip()
+                        results = parts[1].strip()
+                        
+                        self.current_agent_container.markdown("📝 **SQL Query:**")
+                        self.current_agent_container.code(query, language="sql")
+                        self.current_agent_container.markdown("📊 **Results:**")
+                        self.current_agent_container.markdown(results)
+                    else:
+                        self.current_agent_container.code(output)
+                else:
+                    self.current_agent_container.markdown("📤 Tool output:")
+                    self.current_agent_container.code(output)
 
     def on_agent_action(self, action: AgentAction, **kwargs):
         """Display agent action"""

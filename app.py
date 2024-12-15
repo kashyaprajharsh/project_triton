@@ -223,10 +223,12 @@ else:
         print("\n=== DEBUG: New Chat Input ===")
         print(f"Prompt: {prompt}")
         
+        # Display user message
         with st.chat_message("user", avatar="🧑‍💼"):
             st.write(prompt)
         st.session_state.messages.append({"role": "user", "content": prompt})
 
+        # Process with assistant
         with st.chat_message("assistant", avatar="🤖"):
             response_container = st.container()
             callback_handler = CustomStreamlitCallbackHandler(parent_container=response_container)
@@ -286,20 +288,29 @@ else:
                 print("Flow graph execution completed")
                 
                 print("\n=== DEBUG: Processing Output ===")
-                process_agent_output(output, response_container)
-                
-                final_message = next(
-                    (msg for msg in output.get("messages", []) 
-                     if hasattr(msg, 'name') and msg.name == "FinalSynthesis"),
-                    None
-                )
-                if final_message:
-                    print("Final synthesis found and added to chat history")
+                if output.get("next_step") == "FINISH":
+                    final_response = output.get("messages", [])[-1].content
                     st.session_state.messages.append({
-                        "role": "assistant", 
-                        "content": final_message.content
+                        "role": "assistant",
+                        "content": final_response
                     })
-                
+                    #st.write(final_response)  # Display directly in chat
+                else:
+                    # For regular financial analysis, process output normally
+                    process_agent_output(output, response_container)
+                    
+                    # Store the final synthesis in chat history
+                    final_message = next(
+                        (msg for msg in output.get("messages", []) 
+                         if hasattr(msg, 'name') and msg.name == "FinalSynthesis"),
+                        None
+                    )
+                    if final_message:
+                        st.session_state.messages.append({
+                            "role": "assistant", 
+                            "content": final_message.content
+                        })
+
                 # Evaluation expanders
                 with st.expander("🔍 Tool Usage Evaluation"):
                     st.markdown("### News Sentiment Agent Tool Usage:")

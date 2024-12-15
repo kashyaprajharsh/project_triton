@@ -60,7 +60,7 @@ def get_supervisor_chain(llm: BaseChatModel, current_date=None):
             2. Provide detailed task description
             3. Define expected outputs
             4. List validation criteria
-            
+            5. Specify query_type as one of: 'financial_analysis', 'non_financial_analysis'
             Available options: {options}
             
             Respond with your routing decision."""
@@ -83,3 +83,20 @@ def get_supervisor_chain(llm: BaseChatModel, current_date=None):
     supervisor_chain = prompt | llm.with_structured_output(RouteSchema)
 
     return supervisor_chain
+
+
+
+def get_finish_chain(llm: BaseChatModel):
+    """
+    If the supervisor decides to finish the conversation, this chain is executed.
+    """
+    system_prompt = get_finish_step_prompt()
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            MessagesPlaceholder(variable_name="messages"),
+            ("system", system_prompt),
+            ("human", "Please provide an appropriate response to the conversation.")
+        ]
+    )
+    finish_chain = prompt | llm
+    return finish_chain

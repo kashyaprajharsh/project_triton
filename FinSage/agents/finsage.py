@@ -25,7 +25,7 @@ from FinSage.utils.llm.llm import llm, llm_syn
 from FinSage.config.settings import setup_environment
 from FinSage.models.schemas import *
 from FinSage.config.members import get_team_members_details
-from FinSage.utils.chains import get_supervisor_chain
+from FinSage.utils.chains import get_supervisor_chain , get_finish_chain
 from FinSage.models.personality import AgentPersonality
 from FinSage.utils.callback_tools import CustomConsoleCallbackHandler
 #   Import agents
@@ -71,28 +71,27 @@ def supervisor_node(state):
         "personality": state.get("personality").get_prompt_context() if state.get("personality") else ""
     })
     print(f"\nNext Action: {output.next_action}")
+    print("Supervisor output:", output)
     
-    # Fix: Store complete task details in state
+    # Store task details
     state["current_task"] = {
         "description": output.task_description,
         "expected_output": output.expected_output,
-        "validation_criteria": output.validation_criteria
+        "validation_criteria": output.validation_criteria,
+        "query_type": output.query_type
     }
     
-    #state["next_step"] = output.next_action
-
-
-    if output.next_action == "FINISH" and len(chat_history) > 0:
-        # state["next_step"] = "Reflection"
-        # CHANGE THIS LATER!
-        state["next_step"] = "Synthesizer"
+    # Handle routing based on query type
+    if output.query_type == "non_financial_analysis":
+        state["next_step"] = "FINISH"  
+    elif output.next_action == "FINISH" and len(chat_history) > 0:
+        state["next_step"] = "Synthesizer"  
     else:
-        state["next_step"] = output.next_action
+        state["next_step"] = output.next_action  
     
     state["messages"] = chat_history
 
 
-    state["messages"] = chat_history
     
     print(f"\nNext Action: {output.next_action}")
     print(f"Task Description: {output.task_description}")
@@ -333,6 +332,33 @@ ANALYSIS FRAMEWORK:
     return state
 
 
+# Add this after the synthesize_responses function in finsage.py
+def finish_node(state):
+    """
+    Handles non-financial queries and conversation endings
+    """
+    print("\n" + "-"*50)
+    print("💬 FINISH NODE")
+    state["callback"].write_agent_name("Conversation Handler 💬")
+    
+    # Get the finish chain
+    finish_chain = get_finish_chain(llm)
+    
+    # Create messages for the chain
+    messages = state["messages"]
+    
+    # Execute the chain
+    response = finish_chain.invoke({
+        "messages": messages
+    })
+    
+    # Add response to state
+    state["callback"].on_tool_end(response.content)
+    state["messages"].append(AIMessage(content=response.content, name="Finish"))
+    
+    print("-"*50 + "\n")
+    return state
+
 # Build the graph
 def define_graph():
     """
@@ -349,6 +375,8 @@ def define_graph():
     workflow.add_node("SQLAgent", sql_agent)
     
     workflow.add_node("Synthesizer", synthesize_responses)
+    workflow.add_node("FINISH", finish_node)  # Add the finish node
+
      # Add Reflection node with retry policy
     # workflow.add_node(
     #     "Reflection", 
@@ -380,7 +408,8 @@ def define_graph():
     conditional_map = {k: k for k in members}
     #conditional_map["Reflection"] = "Reflection"
     conditional_map["Synthesizer"] = "Synthesizer"
-    conditional_map["FINISH"] = END
+    conditional_map["FINISH"] = "FINISH"
+
     
     workflow.add_conditional_edges(
         "Supervisor",
@@ -390,6 +419,8 @@ def define_graph():
     
     # Add edge from Synthesizer to END
     workflow.add_edge("Synthesizer", END)
+    workflow.add_edge("FINISH", END)  # Add edge from FINISH to END
+
     
     return workflow.compile()
 

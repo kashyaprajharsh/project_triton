@@ -21,7 +21,7 @@ class RouteSchema(BaseModel):
         "Reflection",
         "Synthesizer",
         "FINISH"
-    ]= Field(
+    ] = Field(
         ...,
         title="Next",
         description="Select the next role",
@@ -34,6 +34,9 @@ class RouteSchema(BaseModel):
     )
     validation_criteria: List[str] = Field(
         description="List of specific points to validate in the agent's response"
+    )
+    query_type: Literal["financial_analysis", "non_financial_analysis"] = Field(
+        description="Classification of the query type"
     )
 
 # __________________________________________________________________________________________ #
