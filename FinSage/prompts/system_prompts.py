@@ -4,8 +4,23 @@ from datetime import datetime
 def get_supervisor_prompt_template():
     
     system_prompt = """You are a sophisticated Financial Advisory Supervisor coordinating a team of specialized agents. Your role is to orchestrate comprehensive financial analysis for investment decisions, portfolio management, and financial planning.
+    Check wether you are following the rules and guidelines.
+    Most Important Guideline:
+    " You are a supervisor tasked with managing a conversation between the" 
+    " following workers:  {members}. Given the following user request,"
+    " respond with the worker to act next. Each worker will perform a"
+    " task and respond with their results"
+    - Do not route to the same agent more than 2 times consecutively
+    - If an agent fails to provide satisfactory results after 2 attempts, 
+      try a different approach or end the conversation
 
-   ## Decision-Making Protocols:
+    
+    If the task is simple don't overcomplicate and run again and again
+    just finish the task and provide the user with output.\n
+
+    Don't be oversmart and route to wrong agent and repeat the same task again and again and call the same agent again and again."
+
+    ## Decision-Making Protocols:
 
     ### Simple Queries:
     - For Small talk ,non_financial_analysis and other non-financial questions, use only FINISH agent.
@@ -27,6 +42,7 @@ def get_supervisor_prompt_template():
     ## Additional Query Types:
     - **Portfolio Management**: Coordinate relevant agents based on the specific aspect of portfolio management.
     - **Risk Assessment**: Engage agents to evaluate and mitigate potential risks.
+    
 
     {date_context}
 
@@ -48,6 +64,7 @@ def get_supervisor_prompt_template():
        - Value: Focus on fundamentals and intrinsic value\n
        - Growth: Focus on market dynamics and growth potential\n
        - Blend: Balance between value and growth factors\n
+    
 
     Team Capabilities available agents: {members}
 
@@ -77,6 +94,8 @@ def get_supervisor_prompt_template():
     USE SQL AGENT ONLY FOR HISTORICAL DATA ANALYSIS as data is not real time and only till 2022.\n
 
     ## Decision Framework and RULES to Always Follow:\n
+     ##ALWAYS REMEMBER: MAX_ATTEMPTS to call an agent = 1 for each agent and if an agent has partial success after 1 attempt, move to the next required agent
+
     1. **For Stock Analysis/Trading Decisions (Buy/Sell/Hold Decisions):**
         - **MUST** use **FinancialMetricsAgent** for fundamental health
         - **MUST** use **MarketIntelligenceAgent** for price action & technicals
@@ -143,7 +162,8 @@ def get_supervisor_prompt_template():
         - Small talk (e.g., "How are you?")
         - Non-financial questions (e.g., "What is the weather?")
         - or any thing that is not realted to finance , stock , market , company , portfolio , risk , etc.
-\n
+        \n
+    ##ALWAYS REMEMBER: MAX_ATTEMPTS to call an agent = 1 for each agent and if an agent has partial success after 1 attempt, move to the next required agent
 
     ## Structured Analysis Output:
     {{
@@ -900,9 +920,19 @@ def get_finish_step_prompt():
 SQL_AGENT_ANALYZE_PROMPT = """You are a financial data SQL expert. Analyze the user's question to determine which tables contain relevant information and date availability.
 
 Available tables: {tables}
-Schema information: {schema}
-ASSIGNED TASK:
-{task_description}
+    Description of the tables:
+        Assets Liabilities: Balance sheet data with assets, liabilities, and shareholder equity for companies.\n
+        Fundamentals: Financial metrics including earnings, ratios, and key performance indicators.\n
+        Price: Daily stock price data including open, high, low, close prices, volume, dividends, and stock splits.\n
+        price_fundamentals: Combined table of daily price data with corresponding fundamental metrics.\n
+        ratios: Financial ratios and metrics like P/E, P/S, ROE, ROA for financial analysis.\n
+        revenue_profit: Income statement data focusing on revenue, various profit metrics, and share information.\n
+        industry_pe_ratios: Average P/E ratios by industry sector and number of companies in each industry.\n
+        industry_ticker_mapping: Mapping table that links company tickers to their respective industries.\n
+        technicals: Indicators including moving averages, RSI, MACD, volume metrics, and other trading signals.\n
+    Schema information: {schema}
+    ASSIGNED TASK:
+    {task_description}
 
 EXPECTED OUTPUT:
 {expected_output}

@@ -17,6 +17,8 @@ from FinSage.config.settings import (
     POLYGON_API_KEY,
     FINANCIAL_MODELING_PREP_API_KEY  # Make sure this is imported
 )
+import yfinance as yf
+from datetime import datetime
 
 setup_environment()
 
@@ -311,12 +313,13 @@ def get_news_sentiment(symbol: str) -> dict:
             - relevant_news: List of relevant news articles with title and summary
     """
     try:
+        # First attempt with Alpha Vantage
         url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={symbol}&apikey={apha_api_key}'
         response = requests.get(url)
         data = response.json()
         
         if "Error Message" in data:
-            return {"error": data["Error Message"]}
+            raise Exception(data["Error Message"])
             
         # Initialize counters
         sentiment_counts = {
@@ -381,7 +384,82 @@ def get_news_sentiment(symbol: str) -> dict:
             
         return summary
     except Exception as e:
-        return {"error": f"Failed to fetch news sentiment: {str(e)}"}
+        try:
+            # Fallback to yfinance implementation
+            stock = yf.Ticker(symbol)
+            news = stock.news
+            
+            if not news:
+                return {"error": "No news data available"}
+            
+            # Initialize counters for sentiment analysis
+            sentiment_counts = {
+                "Bearish": 0,
+                "Somewhat-Bearish": 0,
+                "Neutral": 0,
+                "Somewhat-Bullish": 0,
+                "Bullish": 0
+            }
+            
+            relevant_news = []
+            total_sentiment = 0
+            article_count = 0
+            ticker_mentions = {}
+            
+            # Process each news item
+            for article in news:
+                # Basic sentiment assignment based on type
+                sentiment_label = "Neutral"
+                sentiment_score = 0
+                
+                if article.get('type') == 'POSITIVE':
+                    sentiment_label = "Somewhat-Bullish"
+                    sentiment_score = 0.6
+                elif article.get('type') == 'NEGATIVE':
+                    sentiment_label = "Somewhat-Bearish"
+                    sentiment_score = -0.6
+                
+                sentiment_counts[sentiment_label] += 1
+                total_sentiment += sentiment_score
+                article_count += 1
+                
+                relevant_news.append({
+                    'title': article.get('title', ''),
+                    'summary': article.get('text', ''),
+                    'time_published': datetime.fromtimestamp(article.get('providerPublishTime', 0)).strftime('%Y-%m-%dT%H:%M:%S'),
+                    'sentiment_score': sentiment_score,
+                    'sentiment_label': sentiment_label,
+                    'source': article.get('publisher', ''),
+                    'url': article.get('link', '')
+                })
+                
+                # Extract potential ticker mentions from title
+                words = article.get('title', '').split()
+                for word in words:
+                    if word.isupper() and len(word) >= 2 and len(word) <= 5:
+                        ticker_mentions[word] = ticker_mentions.get(word, 0) + 1
+                
+                ticker_mentions[symbol] = ticker_mentions.get(symbol, 0) + 1
+            
+            return {
+                "overall_sentiment": round(total_sentiment / max(1, article_count), 3),
+                "sentiment_distribution": sentiment_counts,
+                "top_tickers": dict(sorted(ticker_mentions.items(), key=lambda x: x[1], reverse=True)[:5]),
+                "article_count": article_count,
+                "relevant_news": sorted(relevant_news, 
+                                    key=lambda x: x['time_published'], 
+                                    reverse=True)[:5],
+                "source": "yfinance"
+            }
+                
+        except Exception as yf_error:
+            return {
+                "error": f"Failed to fetch news data from both sources. Primary error: {str(e)}, Fallback error: {str(yf_error)}",
+                "debug_info": {
+                    "has_news": news is not None if 'news' in locals() else False,
+                    "news_count": len(news) if 'news' in locals() and news is not None else 0
+                }
+            }
     
 @tool
 def get_insider_transactions(symbol: str) -> dict:
@@ -389,12 +467,13 @@ def get_insider_transactions(symbol: str) -> dict:
     Fetch and summarize insider transactions for a given stock symbol.
     """
     try:
+        # First attempt with Alpha Vantage
         url = f'https://www.alphavantage.co/query?function=INSIDER_TRANSACTIONS&symbol={symbol}&apikey={apha_api_key}'
         response = requests.get(url)
         data = response.json()
         
         if "Error Message" in data:
-            return {"error": data["Error Message"]}
+            raise Exception(data["Error Message"])
         
         # Process transactions
         transactions = []
@@ -405,12 +484,10 @@ def get_insider_transactions(symbol: str) -> dict:
         
         for transaction in data.get('data', []):
             try:
-                # Safely convert values with error handling
                 shares = float(transaction['shares'] or 0)
                 price = float(transaction['share_price'] or 0)
                 value = shares * price
                 
-                # Track buy/sell totals
                 if transaction['acquisition_or_disposal'] == 'A':
                     total_buys += 1
                     total_buy_value += value
@@ -418,7 +495,6 @@ def get_insider_transactions(symbol: str) -> dict:
                     total_sells += 1
                     total_sell_value += value
                 
-                # Only add transaction if it has valid values
                 if shares > 0 and price > 0:
                     transactions.append({
                         'date': transaction['transaction_date'],
@@ -431,42 +507,98 @@ def get_insider_transactions(symbol: str) -> dict:
                         'value': value
                     })
             except (ValueError, TypeError):
-                continue  # Skip this transaction if there's any parsing error
-        
-        # Only return significant transactions
-        significant_transactions = sorted(
-            transactions,  # Already filtered for non-zero values
-            key=lambda x: x['value'], 
-            reverse=True
-        )[:10]
-        
-        if not significant_transactions:
-            return {
-                "message": "No significant insider transactions found in the recent data.",
-                "transaction_summary": {
-                    'total_buys': total_buys,
-                    'total_sells': total_sells,
-                    'total_buy_value': round(total_buy_value, 2),
-                    'total_sell_value': round(total_sell_value, 2),
-                    'net_transaction_value': round(total_buy_value - total_sell_value, 2)
-                }
-            }
-            
+                continue
+
         return {
-            'recent_transactions': significant_transactions,
+            'recent_transactions': sorted(transactions, key=lambda x: x['value'], reverse=True)[:10],
             'transaction_summary': {
                 'total_buys': total_buys,
                 'total_sells': total_sells,
                 'total_buy_value': round(total_buy_value, 2),
                 'total_sell_value': round(total_sell_value, 2),
                 'net_transaction_value': round(total_buy_value - total_sell_value, 2)
-            }
+            },
         }
+
     except Exception as e:
-        return {
-            "error": f"Failed to fetch insider transactions: {str(e)}",
-            "message": "This might be due to API rate limiting or temporary service unavailability."
-        }
+        try:
+            # Fallback to yfinance
+            stock = yf.Ticker(symbol)
+            insider_df = stock.insider_transactions
+            
+            if insider_df is None or insider_df.empty:
+                return {"error": "No insider transaction data available"}
+            
+            # Debug print to see the actual structure
+            print("Column names:", insider_df.columns.tolist())
+            
+            transactions = []
+            total_buys = 0
+            total_sells = 0
+            total_buy_value = 0
+            total_sell_value = 0
+            
+            for _, row in insider_df.iterrows():
+                try:
+                    # Handle potential different column names
+                    date = row.get('Date', row.get('date', row.get('Transaction Date', None)))
+                    shares = float(row.get('Shares', row.get('shares', 0)))
+                    value = abs(float(row.get('Value', row.get('value', 0))))
+                    insider = row.get('Insider', row.get('insider', 'N/A'))
+                    title = row.get('Title', row.get('title', 'N/A'))
+                    
+                    # Calculate price if possible
+                    try:
+                        price = value / abs(shares) if shares != 0 else 0
+                    except (ZeroDivisionError, TypeError):
+                        price = 0
+                    
+                    is_buy = shares > 0
+                    if is_buy:
+                        total_buys += 1
+                        total_buy_value += value
+                    else:
+                        total_sells += 1
+                        total_sell_value += value
+                    
+                    transactions.append({
+                        'date': date.strftime('%Y-%m-%d') if hasattr(date, 'strftime') else str(date),
+                        'executive': insider,
+                        'title': title,
+                        'type': 'Direct',
+                        'action': 'Buy' if is_buy else 'Sell',
+                        'shares': abs(shares),
+                        'price': price,
+                        'value': value
+                    })
+                except (ValueError, TypeError, AttributeError) as err:
+                    print(f"Error processing row: {err}")
+                    continue
+            
+            if not transactions:
+                return {"error": "No valid transactions found in the data"}
+            
+            return {
+                'recent_transactions': sorted(transactions, key=lambda x: x['value'], reverse=True)[:10],
+                'transaction_summary': {
+                    'total_buys': total_buys,
+                    'total_sells': total_sells,
+                    'total_buy_value': round(total_buy_value, 2),
+                    'total_sell_value': round(total_sell_value, 2),
+                    'net_transaction_value': round(total_buy_value - total_sell_value, 2)
+                },
+                'source': 'yfinance'
+            }
+                
+        except Exception as yf_error:
+            return {
+                "error": f"Failed to fetch insider transactions: {str(yf_error)}",
+                "debug_info": {
+                    "has_insider_df": insider_df is not None if 'insider_df' in locals() else False,
+                    "is_empty": insider_df.empty if 'insider_df' in locals() and insider_df is not None else True,
+                    "columns": insider_df.columns.tolist() if 'insider_df' in locals() and insider_df is not None else []
+                }
+            }
 
 @tool
 def get_earnings_history(symbol: str) -> dict:
@@ -485,16 +617,17 @@ def get_earnings_history(symbol: str) -> dict:
             - Earnings dates and reporting times
     """
     try:
+        # First attempt with Alpha Vantage
         url = f'https://www.alphavantage.co/query?function=EARNINGS&symbol={symbol}&apikey={apha_api_key}'
         response = requests.get(url)
         data = response.json()
         
         if "Error Message" in data:
-            return {"error": data["Error Message"]}
+            raise Exception(data["Error Message"])
             
         # Process annual earnings
         annual_eps = []
-        for entry in data.get('annualEarnings', [])[:5]:  # Last 5 years
+        for entry in data.get('annualEarnings', [])[:5]:
             annual_eps.append({
                 'year': entry['fiscalDateEnding'][:4],
                 'eps': float(entry['reportedEPS'])
@@ -502,7 +635,7 @@ def get_earnings_history(symbol: str) -> dict:
             
         # Process quarterly earnings
         quarterly_earnings = []
-        for entry in data.get('quarterlyEarnings', [])[:8]:  # Last 8 quarters
+        for entry in data.get('quarterlyEarnings', [])[:8]:
             try:
                 surprise_pct = float(entry['surprisePercentage']) if entry['surprisePercentage'] else 0
             except (ValueError, TypeError):
@@ -518,7 +651,7 @@ def get_earnings_history(symbol: str) -> dict:
             })
             
         # Calculate metrics
-        recent_quarters = quarterly_earnings[:4]  # Last 4 quarters
+        recent_quarters = quarterly_earnings[:4]
         beats = sum(1 for q in recent_quarters if q['surprise_pct'] > 0)
         misses = sum(1 for q in recent_quarters if q['surprise_pct'] < 0)
         
@@ -534,8 +667,47 @@ def get_earnings_history(symbol: str) -> dict:
         }
         
         return summary
+
     except Exception as e:
-        return {"error": f"Failed to fetch earnings data: {str(e)}"}
+        try:
+            # Fallback to yfinance
+            stock = yf.Ticker(symbol)
+            income_stmt = stock.income_stmt
+            quarterly_income = stock.quarterly_income_stmt
+            
+            # Process annual earnings
+            annual_eps = []
+            for date, value in income_stmt.loc['Basic EPS'].items():
+                annual_eps.append({
+                    'year': date.strftime('%Y'),
+                    'eps': float(value)
+                })
+                
+            # Process quarterly earnings
+            quarterly_earnings = []
+            for date, value in quarterly_income.loc['Basic EPS'].items():
+                quarterly_earnings.append({
+                    'quarter': date.strftime('%Y-%m-%d'),
+                    'reported_eps': float(value),
+                    'estimated_eps': float(value),
+                    'surprise_pct': 0,
+                    'report_time': 'bmo'
+                })
+                
+            recent_quarters = quarterly_earnings[:4]
+            
+            return {
+                'annual_eps_trend': annual_eps,
+                'quarterly_earnings': quarterly_earnings,
+                'performance_metrics': {
+                    'earnings_beats_last_4q': 0,
+                    'earnings_misses_last_4q': 0,
+                    'avg_surprise_pct': 0,
+                    'next_report': quarterly_earnings[0] if quarterly_earnings else None
+                },
+            }
+        except Exception as yf_error:
+            return {"error": f"Failed to fetch earnings data from both sources. Primary error: {str(e)}, Fallback error: {str(yf_error)}"}
 
 @tool
 def get_stock_aggregates(
@@ -565,6 +737,7 @@ def get_stock_aggregates(
         dict: Aggregated stock data including OHLCV values
     """
     try:
+        # First attempt with Polygon
         base_url = "https://api.polygon.io/v2/aggs/ticker"
         url = f"{base_url}/{symbol}/range/{multiplier}/{timespan}/{from_date}/{to_date}"
         
@@ -579,7 +752,7 @@ def get_stock_aggregates(
         data = response.json()
         
         if data.get("status") != "OK":
-            return {"error": data.get("error", "Failed to fetch aggregate data")}
+            raise Exception(data.get("error", "Failed to fetch aggregate data"))
             
         results = []
         for bar in data.get("results", []):
@@ -598,11 +771,52 @@ def get_stock_aggregates(
             "ticker": symbol,
             "adjusted": adjusted,
             "results_count": len(results),
-            "aggregates": results
+            "aggregates": results,
         }
         
     except Exception as e:
-        return {"error": f"Failed to fetch aggregate data: {str(e)}"}
+        try:
+            # Convert timespan format for yfinance
+            timespan_mapping = {
+                "minute": "1m",
+                "hour": "1h",
+                "day": "1d",
+                "week": "1wk",
+                "month": "1mo"
+            }
+            yf_timespan = timespan_mapping.get(timespan, "1d")
+            
+            # Fallback to yfinance
+            stock = yf.Ticker(symbol)
+            df = stock.history(
+                start=from_date,
+                end=to_date,
+                interval=yf_timespan,
+                actions=False,
+                auto_adjust=adjusted
+            )
+            
+            results = []
+            for index, row in df.iterrows():
+                results.append({
+                    "timestamp": int(index.timestamp() * 1000),
+                    "open": float(row["Open"]),
+                    "high": float(row["High"]),
+                    "low": float(row["Low"]),
+                    "close": float(row["Close"]),
+                    "volume": float(row["Volume"]),
+                })
+                
+            return {
+                "ticker": symbol,
+                "adjusted": adjusted,
+                "results_count": len(results),
+                "aggregates": results,
+                
+            }
+            
+        except Exception as yf_error:
+            return {"error": f"Failed to fetch aggregate data from both sources. Primary error: {str(e)}, Fallback error: {str(yf_error)}"}
 
 # 1. Financial Metrics Agent - focuses on core financial data
 financial_metrics_tools = [

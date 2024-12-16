@@ -62,6 +62,9 @@ def get_supervisor_chain(llm: BaseChatModel, current_date=None):
             4. List validation criteria
             5. Specify query_type as one of: 'financial_analysis', 'non_financial_analysis'
             Available options: {options}
+            IMPORTANT ROUTING RULES:
+                Max_attempts = 1 for each agent
+                1. Do not route to an agent again and again that has already succeeded and all tools are called and output is generated(marked as completed)
             
             Respond with your routing decision."""
             )

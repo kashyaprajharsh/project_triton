@@ -9,6 +9,7 @@ langchain-google-genai
 langchainhub 
 tavily-python 
 newsapi-python
+yfinance
 eventregistry
 python-dotenv
 datetime

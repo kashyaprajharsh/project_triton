@@ -288,13 +288,19 @@ def evaluate_topic_adherence(state):
 # Conditional edge to decide wether to go to topic adherence or retry tool calling
 def execute_again_all_tools_called(state):
     print("INSIDE execute_again_all_tools_called")
+    print("Current state:", state['news_sentiment_agent_internal_state']['all_tools_eval'])
+    # Safety check for empty passed list
+    if not state['news_sentiment_agent_internal_state']['all_tools_eval']['passed']:
+        print("Passed list is empty, initializing...")
+        state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'] = [False]
+    
     # all_tools_called_eval_passed will contain a booleean
     passed = state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'][-1]
     iterations = len(state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'])
     print("passed value:" ,passed )
     print('iterations: ', iterations, 'values: ' , state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'])
 
-    if passed or iterations >= 2:
+    if passed or iterations >= 1:
    
         return "EvaluateTopicAdherence"
     else:
@@ -318,7 +324,7 @@ def execute_again_topic_adherence(state):
     print("TOPIC ADHERENCE EVALUATION PASSED:", last_passed)
     print("NUMBER OF ITERATIONS FOR TOPIC ADHERENCE:", iterations)
 
-    if last_passed == "true" or iterations >= 2: 
+    if last_passed == "true" or iterations >= 1: 
         print(f'ENDING! iterations {iterations}, value of topic_adherence: {last_passed}')
         return "end"
     else:

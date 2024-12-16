@@ -1,4 +1,4 @@
-# FinSage: Financial Analysis & Agent Evaluation System 🚀
+# FinSage: Financial Analysis & Trading Assistant 🚀
 
 ## Overview
 
