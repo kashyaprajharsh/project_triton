@@ -1,7 +1,7 @@
 {
     "dockerfile_lines": [],
     "graphs": {
-      "agent": "./finsage.py:graph"
+      "agent": "./finsage.py:FinSage_agent"
     },
     "env": "./.env",
     "python_version": "3.11",
