@@ -31,10 +31,11 @@ def get_stock_price(symbol):
     """
     Fetch the current stock price and key market data for the given symbol.
     """
-    url = f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={FINANCIAL_MODELING_PREP_API_KEY}"
-    response = requests.get(url)
-    data = response.json()
     try:
+        # Primary source: Financial Modeling Prep
+        url = f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={FINANCIAL_MODELING_PREP_API_KEY}"
+        response = requests.get(url)
+        data = response.json()
         result = data[0]
         return {
             "symbol": result["symbol"],
@@ -53,42 +54,84 @@ def get_stock_price(symbol):
             "eps": result["eps"],
             "pe": result["pe"],
         }
-    except (IndexError, KeyError):
-        return {"error": f"Could not fetch price for symbol: {symbol}"}
+    except Exception as e:
+        try:
+            # Fallback: yfinance
+            stock = yf.Ticker(symbol)
+            info = stock.info
+            
+            return {
+                "symbol": info.get("symbol", symbol),
+                "name": info.get("longName", "N/A"),
+                "price": info.get("currentPrice", info.get("regularMarketPrice")),
+                "change": info.get("regularMarketChange"),
+                "changesPercentage": info.get("regularMarketChangePercent"),
+                "dayLow": info.get("dayLow"),
+                "dayHigh": info.get("dayHigh"),
+                "yearLow": info.get("fiftyTwoWeekLow"),
+                "yearHigh": info.get("fiftyTwoWeekHigh"),
+                "volume": info.get("volume"),
+                "avgVolume": info.get("averageVolume"),
+                "priceAvg50": info.get("fiftyDayAverage"),
+                "priceAvg200": info.get("twoHundredDayAverage"),
+                "eps": info.get("trailingEps"),
+                "pe": info.get("trailingPE"),
+                "source": "yfinance"
+            }
+        except Exception as yf_error:
+            return {"error": f"Could not fetch price for symbol: {symbol}. Primary error: {str(e)}, Fallback error: {str(yf_error)}"}
 
 @tool
 def get_company_financials(symbol):
     """
-    Fetch basic financial information for the given company symbol such as the industry, the sector, the name of the company, and the market capitalization.
+    Fetch basic financial information for the given company symbol.
     """
-    url = f"https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FINANCIAL_MODELING_PREP_API_KEY}"
-    response = requests.get(url)
-    data = response.json()
     try:
+        # Primary source: Financial Modeling Prep
+        url = f"https://financialmodelingprep.com/api/v3/profile/{symbol}?apikey={FINANCIAL_MODELING_PREP_API_KEY}"
+        response = requests.get(url)
+        data = response.json()
         results = data[0]
-        financials = {
+        return {
             "symbol": results["symbol"],
             "companyName": results["companyName"],
             "marketCap": results["mktCap"],
             "industry": results["industry"],
             "sector": results["sector"],
             "website": results["website"],
-            "beta":results["beta"],
-            "price":results["price"],
+            "beta": results["beta"],
+            "price": results["price"],
         }
-        return financials
-    except (IndexError, KeyError):
-        return {"error": f"Could not fetch financials for symbol: {symbol}"}
+    except Exception as e:
+        try:
+            # Fallback: yfinance
+            stock = yf.Ticker(symbol)
+            info = stock.info
+            
+            return {
+                "symbol": info.get("symbol", symbol),
+                "companyName": info.get("longName"),
+                "marketCap": info.get("marketCap"),
+                "industry": info.get("industry"),
+                "sector": info.get("sector"),
+                "website": info.get("website"),
+                "beta": info.get("beta"),
+                "price": info.get("currentPrice", info.get("regularMarketPrice")),
+                "source": "yfinance"
+            }
+        except Exception as yf_error:
+            return {"error": f"Could not fetch financials for symbol: {symbol}. Primary error: {str(e)}, Fallback error: {str(yf_error)}"}
 
 @tool
 def get_income_statement(symbol):
     """
-    Fetch last income statement for the given company symbol such as revenue, gross profit, net income, EBITDA, EPS.
+    Fetch last income statement for the given company symbol.
     """
-    url = f"https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=annual&apikey={FINANCIAL_MODELING_PREP_API_KEY}"
-    response = requests.get(url)
-    data = response.json()
     try:
+        # Primary source: Financial Modeling Prep
+        url = f"https://financialmodelingprep.com/api/v3/income-statement/{symbol}?period=annual&apikey={FINANCIAL_MODELING_PREP_API_KEY}"
+        response = requests.get(url)
+        data = response.json()
         results = data[0]
         financials = {
             "date": results["date"],
@@ -97,12 +140,34 @@ def get_income_statement(symbol):
             "net Income": results["netIncome"],
             "ebitda": results["ebitda"],
             "EPS": results["eps"],
-            "EPS diluted":results["epsdiluted"]
+            "EPS diluted": results["epsdiluted"]
         }
         return data, financials
-    except (IndexError, KeyError):
-        return {"error": f"Could not fetch financials for symbol: {symbol}"}
-    
+    except Exception as e:
+        try:
+            # Fallback: yfinance
+            stock = yf.Ticker(symbol)
+            income_stmt = stock.income_stmt
+            
+            if income_stmt is None or income_stmt.empty:
+                raise Exception("No income statement data available")
+            
+            latest = income_stmt.iloc[:, 0]  # Get most recent period
+            
+            financials = {
+                "date": latest.name.strftime('%Y-%m-%d'),
+                "revenue": float(latest.get("Total Revenue", 0)),
+                "gross profit": float(latest.get("Gross Profit", 0)),
+                "net Income": float(latest.get("Net Income", 0)),
+                "ebitda": float(latest.get("EBITDA", 0)),
+                "EPS": float(latest.get("Basic EPS", 0)),
+                "EPS diluted": float(latest.get("Diluted EPS", 0)),
+                "source": "yfinance"
+            }
+            
+            return [{"raw": income_stmt.to_dict()}], financials
+        except Exception as yf_error:
+            return {"error": f"Could not fetch income statement for {symbol}. Primary error: {str(e)}, Fallback error: {str(yf_error)}"}
 
 @tool
 def get_balance_sheet(symbol):
@@ -115,15 +180,13 @@ def get_balance_sheet(symbol):
     Returns:
         dict: Balance sheet data including assets, liabilities, and equity information
     """
-    url = f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=annual&apikey={FINANCIAL_MODELING_PREP_API_KEY}"
     try:
+        # Primary source: Financial Modeling Prep
+        url = f"https://financialmodelingprep.com/api/v3/balance-sheet-statement/{symbol}?period=annual&apikey={FINANCIAL_MODELING_PREP_API_KEY}"
         response = requests.get(url)
         data = response.json()
-        
-        # Get most recent statement
         latest = data[0]
         
-        # Extract key metrics
         financials = {
             "date": latest["date"],
             "filing_date": latest["fillingDate"],
@@ -155,7 +218,7 @@ def get_balance_sheet(symbol):
             "total_debt": latest["totalDebt"],
             "net_debt": latest["netDebt"],
             
-            # Ratios (calculated)
+            # Ratios
             "current_ratio": round(latest["totalCurrentAssets"] / latest["totalCurrentLiabilities"], 2),
             "debt_to_equity": round(latest["totalDebt"] / latest["totalStockholdersEquity"], 2) if latest["totalStockholdersEquity"] != 0 else None
         }
@@ -163,9 +226,58 @@ def get_balance_sheet(symbol):
         return data, financials
     
     except Exception as e:
-        return {"error": f"Could not fetch balance sheet for {symbol}. Error: {str(e)}"}
-    
-
+        try:
+            # Fallback: yfinance
+            stock = yf.Ticker(symbol)
+            balance_sheet = stock.balance_sheet
+            
+            if balance_sheet is None or balance_sheet.empty:
+                raise Exception("No balance sheet data available")
+            
+            latest = balance_sheet.iloc[:, 0]  # Get most recent period
+            
+            financials = {
+                "date": latest.name.strftime('%Y-%m-%d'),
+                "filing_date": latest.name.strftime('%Y-%m-%d'),
+                "period": "Annual",
+                
+                # Assets
+                "cash_and_equivalents": float(latest.get("Cash And Cash Equivalents", 0)),
+                "short_term_investments": float(latest.get("Short Term Investments", 0)),
+                "cash_and_short_term_investments": float(latest.get("Cash And Short Term Investments", 0)),
+                "net_receivables": float(latest.get("Net Receivables", 0)),
+                "inventory": float(latest.get("Inventory", 0)),
+                "total_current_assets": float(latest.get("Total Current Assets", 0)),
+                "total_non_current_assets": float(latest.get("Total Non Current Assets", 0)),
+                "total_assets": float(latest.get("Total Assets", 0)),
+                
+                # Liabilities
+                "accounts_payable": float(latest.get("Accounts Payable", 0)),
+                "short_term_debt": float(latest.get("Short Term Debt", 0)),
+                "total_current_liabilities": float(latest.get("Total Current Liabilities", 0)),
+                "long_term_debt": float(latest.get("Long Term Debt", 0)),
+                "total_non_current_liabilities": float(latest.get("Total Non Current Liabilities", 0)),
+                "total_liabilities": float(latest.get("Total Liabilities", 0)),
+                
+                # Equity
+                "retained_earnings": float(latest.get("Retained Earnings", 0)),
+                "total_stockholders_equity": float(latest.get("Total Stockholders Equity", 0)),
+                
+                # Key Metrics
+                "total_debt": float(latest.get("Total Debt", 0)),
+                "net_debt": float(latest.get("Net Debt", 0)),
+                
+                # Ratios
+                "current_ratio": round(float(latest.get("Total Current Assets", 0)) / float(latest.get("Total Current Liabilities", 1)), 2),
+                "debt_to_equity": round(float(latest.get("Total Debt", 0)) / float(latest.get("Total Stockholders Equity", 1)), 2),
+                
+                "source": "yfinance"
+            }
+            
+            return [{"raw": balance_sheet.to_dict()}], financials
+            
+        except Exception as yf_error:
+            return {"error": f"Could not fetch balance sheet for {symbol}. Primary error: {str(e)}, Fallback error: {str(yf_error)}"}
 
 @tool
 def get_cash_flow(symbol):
@@ -178,9 +290,9 @@ def get_cash_flow(symbol):
     Returns:
         dict: Cash flow data including operating, investing, and financing activities
     """
-    url = f"https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?period=annual&apikey={FINANCIAL_MODELING_PREP_API_KEY}"
-    
     try:
+        # Primary source: Financial Modeling Prep
+        url = f"https://financialmodelingprep.com/api/v3/cash-flow-statement/{symbol}?period=annual&apikey={FINANCIAL_MODELING_PREP_API_KEY}"
         response = requests.get(url)
         data = response.json()
         
@@ -231,10 +343,62 @@ def get_cash_flow(symbol):
         return data, financials
     
     except Exception as e:
-        return {"error": f"Could not fetch cash flow statement for {symbol}. Error: {str(e)}"}
-    
-
-
+        try:
+            # Fallback: yfinance
+            stock = yf.Ticker(symbol)
+            cash_flow = stock.cashflow
+            
+            if cash_flow is None or cash_flow.empty:
+                raise Exception("No cash flow data available")
+            
+            latest = cash_flow.iloc[:, 0]  # Get most recent period
+            
+            financials = {
+                "date": latest.name.strftime('%Y-%m-%d'),
+                "filing_date": latest.name.strftime('%Y-%m-%d'),
+                "period": "Annual",
+                
+                # Operating Activities
+                "net_income": float(latest.get("Net Income", 0)),
+                "depreciation_amortization": float(latest.get("Depreciation & Amortization", 0)),
+                "stock_based_compensation": float(latest.get("Stock Based Compensation", 0)),
+                "working_capital_changes": float(latest.get("Change In Working Capital", 0)),
+                "operating_cash_flow": float(latest.get("Operating Cash Flow", 0)),
+                
+                # Working Capital Components
+                "accounts_receivable_change": float(latest.get("Change In Accounts Receivable", 0)),
+                "inventory_change": float(latest.get("Change In Inventory", 0)),
+                "accounts_payable_change": float(latest.get("Change In Accounts Payable", 0)),
+                
+                # Investing Activities
+                "capex": float(latest.get("Capital Expenditure", 0)),
+                "acquisitions": float(latest.get("Acquisitions Net", 0)),
+                "investment_purchases": float(latest.get("Investment Purchases", 0)),
+                "investment_sales": float(latest.get("Investment Sales", 0)),
+                "investing_cash_flow": float(latest.get("Investing Cash Flow", 0)),
+                
+                # Financing Activities
+                "debt_repayment": float(latest.get("Debt Repayment", 0)),
+                "stock_repurchased": float(latest.get("Stock Repurchase", 0)),
+                "dividends_paid": float(latest.get("Dividends Paid", 0)),
+                "financing_cash_flow": float(latest.get("Financing Cash Flow", 0)),
+                
+                # Cash Position
+                "net_change_in_cash": float(latest.get("Net Change In Cash", 0)),
+                "cash_end_period": float(latest.get("Cash At End of Period", 0)),
+                "cash_beginning_period": float(latest.get("Cash At Beginning of Period", 0)),
+                
+                # Key Metrics
+                "free_cash_flow": float(latest.get("Free Cash Flow", 0)),
+                "fcf_margin": round(float(latest.get("Free Cash Flow", 0)) / float(latest.get("Net Income", 1)) * 100, 2),
+                
+                "source": "yfinance"
+            }
+            
+            return [{"raw": cash_flow.to_dict()}], financials
+            
+        except Exception as yf_error:
+            return {"error": f"Could not fetch cash flow statement for {symbol}. Primary error: {str(e)}, Fallback error: {str(yf_error)}"}
 
 polygon = PolygonAPIWrapper()
 ptoolkit = PolygonToolkit.from_polygon_api_wrapper(polygon)

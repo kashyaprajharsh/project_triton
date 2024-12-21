@@ -24,7 +24,7 @@ from FinSage.prompts.system_prompts import get_market_intelligence_agent_prompt,
 from FinSage.utils.callback_tools import CustomConsoleCallbackHandler
 from FinSage.models.schemas import *
 # ##### HELPER FUNCTIONS #########
-def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iterations: int = 2,  return_intermediate_steps: bool = True) -> AgentExecutor:
+def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iterations: int = 2, max_execution_time: int = 120, return_intermediate_steps: bool = True) -> AgentExecutor:
     """
     Creates an agent using the specified ChatOpenAI model, tools, and system prompt.
 
@@ -48,7 +48,7 @@ def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iteration
         ]
     )
     agent = create_openai_tools_agent(llm, tools, prompt)
-    executor = AgentExecutor(agent=agent, tools=tools, max_iterations = max_iterations, return_intermediate_steps = return_intermediate_steps, verbose = True)
+    executor = AgentExecutor(agent=agent, tools=tools, max_iterations = max_iterations, max_execution_time=max_execution_time, return_intermediate_steps = return_intermediate_steps, verbose = True)
     return executor
 
 def get_tools_call_eval_stats(result: Dict):

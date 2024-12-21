@@ -19,6 +19,12 @@ import langgraph
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage 
 
+# import os
+# import sys
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+# # Rest of your imports
+# from FinSage.models.schemas import *
 # local imports
 from FinSage.models.schemas import *
 from FinSage.prompts.system_prompts import get_financial_metrics_agent_prompt, FINANCIAL_METRICS_TOPIC_ADHERENCE_PROMPT

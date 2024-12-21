@@ -117,4 +117,3 @@ class AgentState(TypedDict):
     market_intelligence_agent_internal_state: MarketIntelligenceState
     sql_agent_internal_state: SQLAgentState
     current_task: dict
-
