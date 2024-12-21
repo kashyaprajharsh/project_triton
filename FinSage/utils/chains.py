@@ -35,13 +35,13 @@ def get_supervisor_chain(llm: BaseChatModel, current_date=None):
     # Remove the trailing new line
     formatted_members_string = formatted_string.strip()
 
-    # Debug prints to verify variables
-    print("\n=== Supervisor Chain Variables ===")
-    print(f"Date Context: {date_context}")
-    print(f"\nTeam Members:\n{formatted_members_string}")
+    # # Debug prints to verify variables
+    # print("\n=== Supervisor Chain Variables ===")
+    # print(f"Date Context: {date_context}")
+    # print(f"\nTeam Members:\n{formatted_members_string}")
     
     options = [member["name"] for member in team_members]
-    print(f"\nAvailable Options: {options}")
+    # print(f"\nAvailable Options: {options}")
 
     system_prompt = get_supervisor_prompt_template()
     prompt = ChatPromptTemplate.from_messages(
@@ -77,11 +77,11 @@ def get_supervisor_chain(llm: BaseChatModel, current_date=None):
     )
 
     # Debug the final formatted prompt template
-    print("\n=== Final Prompt Template ===")
-    print("Variables being passed:")
-    print(f"- options: {str(options)}")
-    print(f"- members: [length: {len(formatted_members_string)} chars]")
-    print(f"- date_context: {date_context}")
+    # print("\n=== Final Prompt Template ===")
+    # print("Variables being passed:")
+    # print(f"- options: {str(options)}")
+    # print(f"- members: [length: {len(formatted_members_string)} chars]")
+    # print(f"- date_context: {date_context}")
 
     supervisor_chain = prompt | llm.with_structured_output(RouteSchema)
 
