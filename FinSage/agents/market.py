@@ -53,8 +53,8 @@ def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iteration
 
 def get_tools_call_eval_stats(result: Dict):
     """Helper function to format the output and store evaluation stats"""
-    print("\n📊 TOOL EVALUATION SUMMARY")
-    print("=" * 50)
+    # print("\n📊 TOOL EVALUATION SUMMARY")
+    # print("=" * 50)
     
     # Create stats dictionary to store in state
     run_stats = {
@@ -70,45 +70,48 @@ def get_tools_call_eval_stats(result: Dict):
     
     # Print evaluation results
     all_tools_status = "✅" if result["all_tools_used"] else "❌"
-    print(f"\n🎯 Overall Status:")
-    print(f"  • All Required Tools Used: {all_tools_status}")
+    # print(f"\n🎯 Overall Status:")
+    # print(f"  • All Required Tools Used: {all_tools_status}")
     
-    print(f"\n📋 Tool Inventory:")
-    print(f"  • Available Tools: {', '.join(result['tool_usage']['available_tools'])}")
-    print(f"  • Successfully Used: {', '.join(result['tool_usage']['used_tools'])}")
-    print(f"  • Not Used: {', '.join(result['tool_usage']['unused_tools'])}")
+    # print(f"\n📋 Tool Inventory:")
+    # print(f"  • Available Tools: {', '.join(result['tool_usage']['available_tools'])}")
+    # print(f"  • Successfully Used: {', '.join(result['tool_usage']['used_tools'])}")
+    # print(f"  • Not Used: {', '.join(result['tool_usage']['unused_tools'])}")
     
-    print("\n📈 Usage Statistics:")
+    # print("\n📈 Usage Statistics:")
     for tool, count in result['tool_usage']['call_counts'].items():
         status = "✅" if count > 0 else "❌"
-        print(f"  {status} {tool}: {count} calls")
+        # print(f"  {status} {tool}: {count} calls")
     
     # Error Summary
     has_errors = any(len(errs) > 0 for errs in result['tool_usage']['errors'].values())
     if has_errors:
-        print("\n⚠️ Error Summary:")
+        # print("\n⚠️ Error Summary:")
         errors = result['tool_usage']['errors']
         
         if errors['invalid_tools']:
-            print("\n  Invalid Tool Attempts:")
+            # print("\n  Invalid Tool Attempts:")
             for err in errors['invalid_tools']:
-                print(f"  • Requested: {err['requested']}")
-                print(f"    Available: {', '.join(err['available'])}")
+                # print(f"  • Requested: {err['requested']}")
+                # print(f"    Available: {', '.join(err['available'])}")
+                pass
         
         if errors['execution_errors']:
-            print("\n  Tool Execution Errors:")
+            # print("\n  Tool Execution Errors:")
             for err in errors['execution_errors']:
-                print(f"  • Tool: {err['tool']}")
-                print(f"    Input: {err['input']}")
-                print(f"    Error: {err['error']}")
+                # print(f"  • Tool: {err['tool']}")
+                # print(f"    Input: {err['input']}")
+                # print(f"    Error: {err['error']}")
+                pass
         
         if errors['parser_errors']:
-            print("\n  Parser Errors:")
+            # print("\n  Parser Errors:")
             for err in errors['parser_errors']:
-                print(f"  • Input: {err['input']}")
-                print(f"    Error: {err['error']}")
+                # print(f"  • Input: {err['input']}")
+                # print(f"    Error: {err['error']}")
+                pass
     
-    print("\n🔍 Detailed Tool Execution Log:")
+    # print("\n🔍 Detailed Tool Execution Log:")
     for step in result["tools_used"]:
         status_emoji = {
             "success": "✅",
@@ -117,13 +120,14 @@ def get_tools_call_eval_stats(result: Dict):
             "execution_error": "⚠️"
         }.get(step['status'], "❓")
         
-        print(f"\n  {status_emoji} Tool: {step['tool']}")
-        print(f"    Status: {step['status']}")
-        print(f"    Input: {step['input']}")
+        # print(f"\n  {status_emoji} Tool: {step['tool']}")
+        # print(f"    Status: {step['status']}")
+        # print(f"    Input: {step['input']}")
         if step['status'] == "success":
-            print(f"    Output: {str(step['output'])[:100]}...")  # Truncate long outputs
+            # print(f"    Output: {str(step['output'])[:100]}...")  # Truncate long outputs
+            pass
     
-    print("\n" + "=" * 50)
+    # print("\n" + "=" * 50)
     
     return run_stats
 
@@ -132,8 +136,8 @@ def market_intelligence_node(state):
     """
     Handles market data analysis using tools from tools.py
     """
-    print("\n" + "-"*50)
-    print("📈 MARKET INTELLIGENCE NODE")
+    # print("\n" + "-"*50)
+    # print("📈 MARKET INTELLIGENCE NODE")
     
     # Get task details from state with defaults
     task = state.get("current_task", {})
@@ -141,9 +145,9 @@ def market_intelligence_node(state):
     expected_output = task.get("expected_output", "No expected output specified")
     validation_criteria = task.get("validation_criteria", [])
     
-    print(f"Task Description: {task_description}")
-    print(f"Expected Output: {expected_output}")
-    print(f"Validation Criteria: {', '.join(validation_criteria)}")
+    # print(f"Task Description: {task_description}")
+    # print(f"Expected Output: {expected_output}")
+    # print(f"Validation Criteria: {', '.join(validation_criteria)}")
     
     market_agent = create_agent(
         llm,
@@ -172,14 +176,14 @@ def market_intelligence_node(state):
     state["market_intelligence_agent_internal_state"]["agent_executor_tools"] = available_tools
     state["market_intelligence_agent_internal_state"]["full_response"] = output # output contains all the messages
 
-    print("-"*50 + "\n")
+    # print("-"*50 + "\n")
     return state
 
 # Evaluate all tools called:
 def evaluate_all_tools_called(state):
     """Evaluates tool usage and stores statistics in state"""
     sample_response = state['market_intelligence_agent_internal_state']
-    print("INSIDE EVALUATE ALL TOOLS CALLED: ", sample_response)
+    # print("INSIDE EVALUATE ALL TOOLS CALLED: ", sample_response)
     
     # This dictionary will be used for later evaluation statistics
     result = {
@@ -266,7 +270,7 @@ def evaluate_all_tools_called(state):
     return state
 # Evaluate Topic Adherence
 def evaluate_topic_adherence(state):
-    print(' INSIDE evaluate_topic_adherence')
+    # print(' INSIDE evaluate_topic_adherence')
     messages = [
         SystemMessage(content=MARKET_INTELLIGENCE_TOPIC_ADHERENCE_PROMPT.format(
             question=state['user_input'],
@@ -283,40 +287,37 @@ def evaluate_topic_adherence(state):
 
 # Market Intelligence Conditional Edges
 def execute_again_all_tools_called(state):
-    print("INSIDE execute_again_all_tools_called")
-    # all_tools_called_eval_passed will contain a booleean
+    # print("INSIDE execute_again_all_tools_called")
     passed = state['market_intelligence_agent_internal_state']['all_tools_eval']['passed'][-1]
     iterations = len(state['market_intelligence_agent_internal_state']['all_tools_eval']['passed'])
-    print("passed value:" ,passed )
-    print('iterations: ', iterations, 'values: ' , state['market_intelligence_agent_internal_state']['all_tools_eval']['passed'])
+    # print("passed value:" ,passed )
+    # print('iterations: ', iterations, 'values: ' , state['market_intelligence_agent_internal_state']['all_tools_eval']['passed'])
 
     if passed or iterations >= 2:
         return "EvaluateTopicAdherence"
     else:
-        print('GO BACK TO THE AGENT, tools not passed')
+        # print('GO BACK TO THE AGENT, tools not passed')
         return "MarketIntelligenceAgent"
 
 def execute_again_topic_adherence(state):
-    print('INSIDE execute_again_topic_adherence')
+    # print('INSIDE execute_again_topic_adherence')
     
-    # Check if 'topic_adherence_eval' has any evaluations
     if not state['market_intelligence_agent_internal_state']['topic_adherence_eval']['passed']:
-        print("No topic adherence evaluations found.")
+        # print("No topic adherence evaluations found.")
         return "MarketIntelligenceAgent"  
     
-    # Access the latest evaluation
     last_passed = state['market_intelligence_agent_internal_state']['topic_adherence_eval']['passed'][-1].lower()
     # Check how many evaluations occured
     iterations = len(state['market_intelligence_agent_internal_state']['topic_adherence_eval']['passed'])
     
-    print("TOPIC ADHERENCE EVALUATION PASSED:", last_passed)
-    print("NUMBER OF ITERATIONS FOR TOPIC ADHERENCE:", iterations)
+    # print("TOPIC ADHERENCE EVALUATION PASSED:", last_passed)
+    # print("NUMBER OF ITERATIONS FOR TOPIC ADHERENCE:", iterations)
 
     if last_passed == "true" or iterations >= 2: 
-        print(f'ENDING! iterations {iterations}, value of topic_adherence: {last_passed}')
+        # print(f'ENDING! iterations {iterations}, value of topic_adherence: {last_passed}')
         return "end"
     else:
-        print(f'RETURN TO AGENT, adherence failed! iterations {iterations}, value of topic_adherence: {last_passed}')
+        # print(f'RETURN TO AGENT, adherence failed! iterations {iterations}, value of topic_adherence: {last_passed}')
         return "MarketIntelligenceAgent"
 
 # Build the Market Intelligence Agent

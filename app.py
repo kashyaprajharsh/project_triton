@@ -20,15 +20,18 @@ setup_environment()
 # Debug helper function
 def debug_state(state):
     """Debug helper to print state contents"""
-    print("\n=== DEBUG: State Contents ===")
+    # print("\n=== DEBUG: State Contents ===")
     for key, value in state.items():
         if key == "messages":
-            print(f"messages: {len(value)} messages")
+            # print(f"messages: {len(value)} messages")
+            pass
         elif key == "personality":
-            print(f"personality: {value.get_prompt_context()}")
+            # print(f"personality: {value.get_prompt_context()}")
+            pass
         else:
-            print(f"{key}: {value}")
-    print("===========================\n")
+            # print(f"{key}: {value}")
+            pass
+    # print("===========================\n")
 
 # Page configuration        
 st.set_page_config(
@@ -48,7 +51,7 @@ message_history = StreamlitChatMessageHistory()
 
 def process_agent_output(output, response_container):
     """Process and display the agent output in a structured way"""
-    print("\n=== DEBUG: Processing Agent Output ===")
+    # print("\n=== DEBUG: Processing Agent Output ===")
     try:
         messages = output.get("messages", [])
         final_synthesis = None
@@ -56,15 +59,15 @@ def process_agent_output(output, response_container):
         for message in messages:
             if hasattr(message, 'name') and message.name == "FinalSynthesis":
                 final_synthesis = message.content
-                print("Found final synthesis")
+                # print("Found final synthesis")
                 break
         
         if final_synthesis:
-            print("Displaying final synthesis in UI")
+            # print("Displaying final synthesis in UI")
             st.markdown(final_synthesis)
                 
     except Exception as e:
-        print(f"Error in process_agent_output: {str(e)}")
+        # print(f"Error in process_agent_output: {str(e)}")
         st.error(f"Error processing output: {str(e)}")
 
 # Common header for both landing and chat pages
@@ -220,8 +223,8 @@ else:
 
     # Chat input and processing
     if prompt := st.chat_input("Ask me about financial analysis, market trends, or investment strategies..."):
-        print("\n=== DEBUG: New Chat Input ===")
-        print(f"Prompt: {prompt}")
+        # print("\n=== DEBUG: New Chat Input ===")
+        # print(f"Prompt: {prompt}")
         
         # Display user message
         with st.chat_message("user", avatar="🧑‍💼"):
@@ -234,7 +237,7 @@ else:
             callback_handler = CustomStreamlitCallbackHandler(parent_container=response_container)
             
             try:
-                print("\n=== DEBUG: Processing User Input ===")
+                # print("\n=== DEBUG: Processing User Input ===")
                 settings = {
                     "model": "gpt-4o-mini",
                     "temperature": 0.3,
@@ -280,14 +283,14 @@ else:
                 
                 debug_state(state)
                 
-                print("\n=== DEBUG: Invoking Flow Graph ===")
+                # print("\n=== DEBUG: Invoking Flow Graph ===")
                 output = FinSage_agent.invoke(
                     state,
                     {"recursion_limit": 30},
                 )
-                print("Flow graph execution completed")
+                # print("Flow graph execution completed")
                 
-                print("\n=== DEBUG: Processing Output ===")
+                # print("\n=== DEBUG: Processing Output ===")
                 if output.get("next_step") == "FINISH":
                     final_response = output.get("messages", [])[-1].content
                     st.session_state.messages.append({
@@ -341,9 +344,9 @@ else:
                     st.json(response_container)
                 
             except Exception as e:
-                print(f"\n=== DEBUG: Error Occurred ===\n{str(e)}")
+                # print(f"\n=== DEBUG: Error Occurred ===\n{str(e)}")
                 st.error("🚨 An error occurred. Please try again or rephrase your question.")
-                print(f"Detailed error: {str(e)}")
+                # print(f"Detailed error: {str(e)}")
                 st.session_state.messages.append({
                     "role": "assistant", 
                     "content": f"I apologize, but I encountered an error: {str(e)}"

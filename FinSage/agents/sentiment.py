@@ -25,7 +25,7 @@ from FinSage.utils.callback_tools import CustomConsoleCallbackHandler
 from FinSage.models.schemas import *
 
 # ##### HELPER FUNCTIONS #########
-def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iterations: int = 3, max_execution_time: int = 120, return_intermediate_steps: bool = True) -> AgentExecutor:
+def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iterations: int = 3, max_execution_time: int = 200, return_intermediate_steps: bool = True) -> AgentExecutor:
     """
     Creates an agent using the specified ChatOpenAI model, tools, and system prompt.
 
@@ -54,8 +54,8 @@ def create_agent(llm: ChatOpenAI, tools: list, system_prompt: str, max_iteration
 
 def get_tools_call_eval_stats(result: Dict):
     """Helper function to format the output and store evaluation stats"""
-    print("\n📊 TOOL EVALUATION SUMMARY")
-    print("=" * 50)
+    # print("\n📊 TOOL EVALUATION SUMMARY")
+    # print("=" * 50)
     
     # Create stats dictionary to store in state
     run_stats = {
@@ -71,45 +71,48 @@ def get_tools_call_eval_stats(result: Dict):
     
     # Print evaluation results
     all_tools_status = "✅" if result["all_tools_used"] else "❌"
-    print(f"\n🎯 Overall Status:")
-    print(f"  • All Required Tools Used: {all_tools_status}")
+    # print(f"\n🎯 Overall Status:")
+    # print(f"  • All Required Tools Used: {all_tools_status}")
     
-    print(f"\n📋 Tool Inventory:")
-    print(f"  • Available Tools: {', '.join(result['tool_usage']['available_tools'])}")
-    print(f"  • Successfully Used: {', '.join(result['tool_usage']['used_tools'])}")
-    print(f"  • Not Used: {', '.join(result['tool_usage']['unused_tools'])}")
+    # print(f"\n📋 Tool Inventory:")
+    # print(f"  • Available Tools: {', '.join(result['tool_usage']['available_tools'])}")
+    # print(f"  • Successfully Used: {', '.join(result['tool_usage']['used_tools'])}")
+    # print(f"  • Not Used: {', '.join(result['tool_usage']['unused_tools'])}")
     
-    print("\n📈 Usage Statistics:")
+    # print("\n📈 Usage Statistics:")
     for tool, count in result['tool_usage']['call_counts'].items():
         status = "✅" if count > 0 else "❌"
-        print(f"  {status} {tool}: {count} calls")
+        # print(f"  {status} {tool}: {count} calls")
     
     # Error Summary
     has_errors = any(len(errs) > 0 for errs in result['tool_usage']['errors'].values())
     if has_errors:
-        print("\n⚠️ Error Summary:")
+        # print("\n⚠️ Error Summary:")
         errors = result['tool_usage']['errors']
         
         if errors['invalid_tools']:
-            print("\n  Invalid Tool Attempts:")
+            # print("\n  Invalid Tool Attempts:")
             for err in errors['invalid_tools']:
-                print(f"  • Requested: {err['requested']}")
-                print(f"    Available: {', '.join(err['available'])}")
+                # print(f"  • Requested: {err['requested']}")
+                # print(f"    Available: {', '.join(err['available'])}")
+                pass
         
         if errors['execution_errors']:
-            print("\n  Tool Execution Errors:")
+            # print("\n  Tool Execution Errors:")
             for err in errors['execution_errors']:
-                print(f"  • Tool: {err['tool']}")
-                print(f"    Input: {err['input']}")
-                print(f"    Error: {err['error']}")
+                # print(f"  • Tool: {err['tool']}")
+                # print(f"    Input: {err['input']}")
+                # print(f"    Error: {err['error']}")
+                pass
         
         if errors['parser_errors']:
-            print("\n  Parser Errors:")
+            # print("\n  Parser Errors:")
             for err in errors['parser_errors']:
-                print(f"  • Input: {err['input']}")
-                print(f"    Error: {err['error']}")
+                # print(f"  • Input: {err['input']}")
+                # print(f"    Error: {err['error']}")
+                pass
     
-    print("\n🔍 Detailed Tool Execution Log:")
+    # print("\n🔍 Detailed Tool Execution Log:")
     for step in result["tools_used"]:
         status_emoji = {
             "success": "✅",
@@ -118,13 +121,14 @@ def get_tools_call_eval_stats(result: Dict):
             "execution_error": "⚠️"
         }.get(step['status'], "❓")
         
-        print(f"\n  {status_emoji} Tool: {step['tool']}")
-        print(f"    Status: {step['status']}")
-        print(f"    Input: {step['input']}")
+        # print(f"\n  {status_emoji} Tool: {step['tool']}")
+        # print(f"    Status: {step['status']}")
+        # print(f"    Input: {step['input']}")
         if step['status'] == "success":
-            print(f"    Output: {str(step['output'])[:100]}...")  # Truncate long outputs
+            # print(f"    Output: {str(step['output'])[:100]}...")  # Truncate long outputs
+            pass
     
-    print("\n" + "=" * 50)
+    # print("\n" + "=" * 50)
     
     return run_stats
 
@@ -134,14 +138,14 @@ def news_sentiment_node(state):
     """
     Handles news analysis and sentiment tracking using tools from tools.py
     """
-    print("\n" + "-"*50)
-    print("📰 NEWS SENTIMENT NODE")
+    # print("\n" + "-"*50)
+    # print("📰 NEWS SENTIMENT NODE")
     
     # Get task details from supervisor
     task = state.get("current_task", {})
-    print(f"Task Description: {task.get('description')}")
-    print(f"Expected Output: {task.get('expected_output')}")
-    print(f"Validation Criteria: {', '.join(task.get('validation_criteria', []))}")
+    # print(f"Task Description: {task.get('description')}")
+    # print(f"Expected Output: {task.get('expected_output')}")
+    # print(f"Validation Criteria: {', '.join(task.get('validation_criteria', []))}")
     
     sentiment_agent = create_agent(
         llm,
@@ -158,22 +162,20 @@ def news_sentiment_node(state):
     
     state["callback"].write_agent_name("News & Sentiment Agent 📰")
     output = sentiment_agent.invoke(
-        {"messages": state["messages"]}, # state["messages"] # [HumanMessage(state["user_input"])]
+        {"messages": state["messages"]},
         {"callbacks": [state["callback"]], } , return_intermediate_steps = True
     )
-    print(f"Analysis complete - Output length: {len(output.get('output', ''))}")
+    # print(f"Analysis complete - Output length: {len(output.get('output', ''))}")
     
     state["messages"].append(
-        AIMessage(content=output.get("output"), name="NewsSentiment") # changed it from Human to AIMessage
+        AIMessage(content=output.get("output"), name="NewsSentiment")
     )
 
-    # ADDED: sentiment_agent tools:
     available_tools = {tool.name: 0 for tool in sentiment_agent.tools}                                           
     state["news_sentiment_agent_internal_state"]["agent_executor_tools"] = available_tools
-    state["news_sentiment_agent_internal_state"]["full_response"] = output # output contains all the messages
-    #print("THIS IS THE OUTPUT: ", output)
+    state["news_sentiment_agent_internal_state"]["full_response"] = output
 
-    print("-"*50 + "\n")
+    # print("-"*50 + "\n")
     return state
 
 # Evaluate all tools called:
@@ -268,7 +270,7 @@ def evaluate_all_tools_called(state):
 
 # Evaluate topic adherene
 def evaluate_topic_adherence(state):
-    print(' INSIDE evaluate_topic_adherence')
+    # print(' INSIDE evaluate_topic_adherence')
     messages = [
         SystemMessage(content=NEWS_SENTIMENT_TOPIC_ADHERENCE_PROMPT.format(
             question=state['user_input'],
@@ -278,7 +280,6 @@ def evaluate_topic_adherence(state):
     llm_evaluator = llm.with_structured_output(LLM_TopicAdherenceEval)
     response = llm_evaluator.invoke(messages)
     
-    # Append to the internal state:
     state['news_sentiment_agent_internal_state']['topic_adherence_eval']['passed'].append(response.passed)
     state['news_sentiment_agent_internal_state']['topic_adherence_eval']['reason'].append(response.reason)
     return state
@@ -287,33 +288,29 @@ def evaluate_topic_adherence(state):
 
 # Conditional edge to decide wether to go to topic adherence or retry tool calling
 def execute_again_all_tools_called(state):
-    print("INSIDE execute_again_all_tools_called")
-    print("Current state:", state['news_sentiment_agent_internal_state']['all_tools_eval'])
-    # Safety check for empty passed list
+    # print("INSIDE execute_again_all_tools_called")
+    # print("Current state:", state['news_sentiment_agent_internal_state']['all_tools_eval'])
     if not state['news_sentiment_agent_internal_state']['all_tools_eval']['passed']:
-        print("Passed list is empty, initializing...")
+        # print("Passed list is empty, initializing...")
         state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'] = [False]
     
-    # all_tools_called_eval_passed will contain a booleean
     passed = state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'][-1]
     iterations = len(state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'])
-    print("passed value:" ,passed )
-    print('iterations: ', iterations, 'values: ' , state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'])
+    # print("passed value:" ,passed )
+    # print('iterations: ', iterations, 'values: ' , state['news_sentiment_agent_internal_state']['all_tools_eval']['passed'])
 
-    if passed or iterations >= 1:
-   
+    if passed or iterations >= 2:
         return "EvaluateTopicAdherence"
     else:
-        print('GO BACK TO THE AGENT, tools not passed')
+        # print('GO BACK TO THE AGENT, tools not passed')
         return "NewsSentimentAgent"
 
 # Conditional edge to decide wether to END of go back to NewsSentimentAgent
 def execute_again_topic_adherence(state):
-    print('INSIDE execute_again_topic_adherence')
+    # print('INSIDE execute_again_topic_adherence')
     
-    # Check if 'topic_adherence_eval' has any evaluations
     if not state['news_sentiment_agent_internal_state']['topic_adherence_eval']['passed']:
-        print("No topic adherence evaluations found.")
+        # print("No topic adherence evaluations found.")
         return "NewsSentimentAgent"  
     
     # Access the latest evaluation
@@ -321,14 +318,14 @@ def execute_again_topic_adherence(state):
     # Check how many evaluations occured
     iterations = len(state['news_sentiment_agent_internal_state']['topic_adherence_eval']['passed'])
     
-    print("TOPIC ADHERENCE EVALUATION PASSED:", last_passed)
-    print("NUMBER OF ITERATIONS FOR TOPIC ADHERENCE:", iterations)
+    # print("TOPIC ADHERENCE EVALUATION PASSED:", last_passed)
+    # print("NUMBER OF ITERATIONS FOR TOPIC ADHERENCE:", iterations)
 
-    if last_passed == "true" or iterations >= 1: 
-        print(f'ENDING! iterations {iterations}, value of topic_adherence: {last_passed}')
+    if last_passed == "true" or iterations >= 2: 
+        # print(f'ENDING! iterations {iterations}, value of topic_adherence: {last_passed}')
         return "end"
     else:
-        print(f'RETURN TO AGENT, adherence failed! iterations {iterations}, value of topic_adherence: {last_passed}')
+        # print(f'RETURN TO AGENT, adherence failed! iterations {iterations}, value of topic_adherence: {last_passed}')
         return "NewsSentimentAgent"
 
 # Define the graph

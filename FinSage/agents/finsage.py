@@ -40,11 +40,11 @@ def supervisor_node(state):
     """
     The supervisor node coordinates task delegation and validation.
     """
-    print("\n" + "="*50)
-    print("🎯 SUPERVISOR NODE")
-    print(f"Current Input: {state['user_input']}")
-    print(f"Analysis Date: {state['current_date']}")
-    print(f"Personality in supervisor: {state.get('personality')}")
+    # print("\n" + "="*50)
+    # print("🎯 SUPERVISOR NODE")
+    # print(f"Current Input: {state['user_input']}")
+    # print(f"Analysis Date: {state['current_date']}")
+    # print(f"Personality in supervisor: {state.get('personality')}")
     
     # Add SQL data cutoff check
     sql_cutoff_date = datetime(2022, 12, 31)
@@ -53,7 +53,7 @@ def supervisor_node(state):
 
     chat_history = state.get("messages", [])
     supervisor_chain = get_supervisor_chain(llm, current_date=state['current_date'])
-    print("="*50)
+    # print("="*50)
     # print("FULL CHAIN COMPONENTS:")
     # print(supervisor_chain)
 
@@ -62,16 +62,16 @@ def supervisor_node(state):
         print("Starting new conversation")
     
     # Debug the chain invocation
-    print("\n=== Chain Invocation ===")
-    print("Messages:", len(chat_history))
-    print("Personality:", state.get("personality").get_prompt_context() if state.get("personality") else "None")
+    # print("\n=== Chain Invocation ===")
+    # print("Messages:", len(chat_history))
+    # print("Personality:", state.get("personality").get_prompt_context() if state.get("personality") else "None")
     
     output = supervisor_chain.invoke({
         "messages": chat_history,
         "personality": state.get("personality").get_prompt_context() if state.get("personality") else ""
     })
     print(f"\nNext Action: {output.next_action}")
-    print("Supervisor output:", output)
+    # print("Supervisor output:", output)
     
     # Store task details
     state["current_task"] = {
@@ -93,9 +93,9 @@ def supervisor_node(state):
 
 
     
-    print(f"\nNext Action: {output.next_action}")
-    print(f"Task Description: {output.task_description}")
-    print("="*50 + "\n")
+    # print(f"\nNext Action: {output.next_action}")
+    # print(f"Task Description: {output.task_description}")
+    # print("="*50 + "\n")
     
     return state
 
@@ -105,11 +105,11 @@ def synthesize_responses(state):
     Final node that synthesizes all agent responses into a comprehensive recommendation
     """
     state["callback"].write_agent_name("Investment Analysis Synthesis 🎯")
-    print("\n" + "-"*50)
-    print(" SYNTHESIS NODE")
+    # print("\n" + "-"*50)
+    # print(" SYNTHESIS NODE")
     
     messages = state["messages"]
-    print(f"Synthesizing {len(messages)} messages")
+    # print(f"Synthesizing {len(messages)} messages")
     
     messages = state["messages"]
 
@@ -324,7 +324,7 @@ ANALYSIS FRAMEWORK:
         )),
         HumanMessage(content="Synthesize the analyses into a focused response that directly addresses the query in a best format supported by evidence and data(SHOULD BE IN TABLE FORMAT for all numerical data) and investment profile and urls from news_sentiment source data")
     ]
-    print(messages)
+    # print(messages)
     
     final_response = llm_syn.invoke(messages)
     state["callback"].on_tool_end(final_response.content)
@@ -337,8 +337,8 @@ def finish_node(state):
     """
     Handles non-financial queries and conversation endings
     """
-    print("\n" + "-"*50)
-    print("💬 FINISH NODE")
+    # print("\n" + "-"*50)
+    # print("💬 FINISH NODE")
     state["callback"].write_agent_name("Conversation Handler 💬")
     
     # Get the finish chain
@@ -356,7 +356,7 @@ def finish_node(state):
     state["callback"].on_tool_end(response.content)
     state["messages"].append(AIMessage(content=response.content, name="Finish"))
     
-    print("-"*50 + "\n")
+    # print("-"*50 + "\n")
     return state
 
 # Build the graph
