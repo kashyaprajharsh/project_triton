@@ -673,6 +673,10 @@ def get_insider_transactions(symbol: str) -> dict:
             except (ValueError, TypeError):
                 continue
 
+        # If no transactions were found, raise an exception to trigger the fallback
+        if not transactions:
+            raise Exception("No transactions found in Alpha Vantage response")
+
         return {
             'recent_transactions': sorted(transactions, key=lambda x: x['value'], reverse=True)[:10],
             'transaction_summary': {
@@ -682,6 +686,7 @@ def get_insider_transactions(symbol: str) -> dict:
                 'total_sell_value': round(total_sell_value, 2),
                 'net_transaction_value': round(total_buy_value - total_sell_value, 2)
             },
+            'source': 'alpha_vantage'
         }
 
     except Exception as e:
